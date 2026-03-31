@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Docker
+*.log
+
+# AI Workflow System (proprietary — do not publish)
+.agent/workflows/
+.agent/guides/
+
+# Internal project planning
+docs/progress.md
+docs/architect_journal.md
+docs/*PRD*.md
+docs/*prd*.md
+
+# Multi-agent platform context (auto-generated, not committed)
+CLAUDE.md
+.claude/
+AGENTS.md
+.cursorrules

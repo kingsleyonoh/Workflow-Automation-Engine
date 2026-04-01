@@ -1,0 +1,45 @@
+# Version control
+.git
+.gitignore
+
+# Python artifacts (rebuilt in container)
+__pycache__
+*.py[cod]
+*.egg-info
+dist
+build
+*.egg
+.eggs
+
+# Virtual environment
+venv
+.venv
+env
+
+# Documentation & AI workflows (not needed in image)
+docs/
+.agent/
+*.md
+LICENSE
+
+# Environment (injected at runtime)
+.env
+.env.*
+
+# IDE & OS
+.vscode
+.idea
+*.swp
+.DS_Store
+Thumbs.db
+
+# Testing
+tests/
+.coverage
+htmlcov/
+.pytest_cache
+.mypy_cache
+
+# Docker
+docker-compose*.yml
+Dockerfile

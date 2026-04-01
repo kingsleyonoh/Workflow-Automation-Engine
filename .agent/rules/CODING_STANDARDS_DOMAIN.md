@@ -6,7 +6,7 @@
 
 ### Dev Branch Workflow
 1. All implementation work happens on `dev` branch
-2. Tests run against local services ({{LOCAL_SERVICES}})
+2. Tests run against local services (local PostgreSQL, local Redis)
 3. Each completed item → commit → push to `dev`
 4. Run full test suite frequently
 
@@ -55,7 +55,7 @@
 
 Before merging ANY feature to `main`:
 
-1. **All tests pass** — `python -m pytest` / `npm test` / equivalent shows 0 failures
+1. **All tests pass** — `python -m pytest` shows 0 failures
 2. **No console.log / print debugging** — remove all debug output
 3. **No TODO/FIXME/HACK** — resolve them or create tickets
 4. **Error handling exists** — no unhandled exceptions in user flows

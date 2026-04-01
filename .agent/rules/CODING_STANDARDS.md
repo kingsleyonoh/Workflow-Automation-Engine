@@ -22,36 +22,18 @@ If your task touches any of the domains below, **also read the corresponding rul
 | Database / migrations / queries | `.agent/rules/db_rules.md` (if exists) |
 | Background jobs / queues / scheduling | `.agent/rules/jobs_rules.md` (if exists) |
 | API endpoints / serializers / validation | `.agent/rules/api_rules.md` (if exists) |
+| Module dependencies / multi-tenant / framework patterns | `.agent/rules/architecture_rules.md` |
 
 > These files are created by `/bootstrap` when a domain has 5+ concentrated conventions. If a file doesn't exist for a domain, the relevant rules are here in CODING_STANDARDS.md.
 
 
 ## Skill Selection & Orchestration
-You have a vast library of specialized skills available. **Use them proactively** — don't wing it when a skill exists for the task.
-
-### How Skill Selection Works
-1. **Before starting any implementation task**, mentally scan your available skills for matches.
-2. If a relevant skill exists, **read its SKILL.md first**, then follow its guidance.
-3. **Announce your choice**: *"I am invoking the [skill-name] skill to ensure this follows best practices."*
-4. When multiple skills could apply, invoke the most specific one (e.g., `react-patterns` over `frontend-design` for a React component).
-5. **When in doubt, invoke the skill.** Reading a SKILL.md costs 30 seconds. Getting it wrong costs hours.
-
-### When to Invoke Skills (Non-Negotiable)
-- **Building with a specific framework/library** → find the matching skill (React, Next.js, Django, FastAPI, etc.)
-- **Touching security** (auth, input validation, secrets, API exposure) → invoke a security skill
-- **Writing tests** → invoke the testing skill for your language/framework
-- **Designing a database schema or API** → invoke the design/architecture skill
-- **Debugging a bug** → invoke `systematic-debugging` before guessing
-- **Deploying or containerizing** → invoke the deployment skill for your platform
-- **Integrating a payment provider, email service, or external API** → check for a dedicated skill first
-- **Working with AI/LLM features** → invoke the relevant AI skill (RAG, agents, prompts)
-- **Writing documentation** → invoke the documentation skill for the format you need
-- **Unfamiliar domain or new library** → research skill first, then build
-
-### What NOT to Do
-- ❌ Skip skills because "I already know this" — the skill may have guardrails you'd miss
-- ❌ Hardcode patterns from memory when a skill has the latest best practices
-- ❌ Use a generic approach when a project-specific skill exists
+- **Before starting any task**, scan available skills for matches. If one exists, read its SKILL.md first.
+- **Announce your choice**: *"Using skill: [skill-name] for this task."*
+- When multiple skills apply, invoke the most specific one.
+- **When in doubt, invoke the skill.** Reading a SKILL.md costs 30 seconds. Getting it wrong costs hours.
+- **Non-negotiable triggers:** framework/library work, security, tests, schema/API design, debugging, deployment, integrations, AI/LLM features.
+- ❌ Never skip skills because "I already know this" — the skill may have guardrails you'd miss.
 
 ## Git Commit Convention
 
@@ -67,7 +49,7 @@ You have a vast library of specialized skills available. **Use them proactively*
 | `chore` | Tooling, workflows, config, dependencies |
 | `style` | Formatting, whitespace, no logic change |
 
-**Scope** = the module, app, or area affected (e.g., `pricing`, `auth`, `db`, `workflows`).
+**Scope** = the module or area affected. Valid scopes: `engine`, `steps`, `triggers`, `queue`, `replay`, `tenants`, `api`, `db`, `lib`, `config`.
 
 **Rules:**
 - Subject line max 72 characters.
@@ -77,12 +59,13 @@ You have a vast library of specialized skills available. **Use them proactively*
 
 **Examples:**
 ```
-feat(pricing): implement UndercutBracket model with tenant FK
-fix(sending): guard against None accounts on sending page
-refactor(db): extract monitoring queries into dedicated mixin
-test(replies): add 11 tests for intent classification edge cases
+feat(tenants): implement tenant registration with bcrypt API keys
+feat(engine): add DAG parser with cycle detection
+fix(steps): guard against timeout in http step executor
+refactor(db): extract connection pool config into postgres module
+test(engine): add 8 tests for conditional branching edge cases
 docs(context): update CODEBASE_CONTEXT.md with new schema tables
-chore(workflows): add sprint velocity to resume workflow
+chore(config): add arq worker settings to .env.example
 ```
 
 ## AI Discipline Rules (Prevent Common AI Failures)
@@ -172,3 +155,7 @@ chore(workflows): add sprint velocity to resume workflow
 - Tests always run against local dev services on `dev` branch.
 - Merge `dev` → `main` only when all tests pass and feature is complete.
 - After merge, run migrations against production.
+
+## Architecture Rules
+
+> Module dependencies, multi-tenant isolation, and framework conventions are in `.agent/rules/architecture_rules.md`. Read it before any structural work.

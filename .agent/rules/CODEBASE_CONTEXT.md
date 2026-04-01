@@ -1,109 +1,211 @@
 # Workflow Automation Engine — Codebase Context
 
-> **This is the TEMPLATE version of `CODEBASE_CONTEXT.md`** — a blueprint with empty tables and `{{PLACEHOLDER}}` tokens.
->
-> When a new project is created via `/bootstrap` or `/retrofit`, this file is copied and populated with real project data (tech stack, modules, schema, etc.). Once populated, it becomes the AI's primary source of truth for understanding that project. Updated by `/sync-context`.
->
-> **Do NOT fill in the tables here.** They are intentionally empty — workflows fill them per-project.
->
-> Last updated: {{DATE}}
-> Template synced: {{DATE}}
-
-<template_manager_warning>
-⚠️ **TEMPLATE MANAGER — MANDATORY PROCESS FOR EVERY CHANGE:**
-1. **BEFORE modifying any file** in this template, open `MAINTAINING.md` and find the matching checklist.
-2. **AFTER modifying the file**, walk through every item in that checklist and apply each one.
-3. **AFTER all checklist items are done**, check the "After ANY Template Change" section at the bottom.
-4. Do NOT commit until all propagation steps are complete.
-
-This is not optional. Skipping this causes sync failures across all downstream projects.
-(Note: bootstrap/retrofit workflows will delete this block when creating a new project.)
-</template_manager_warning>
+> Last updated: 2026-04-01
+> Template synced: 2026-03-31
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Language | |
-| Framework | |
-| Database | |
-| Hosting | |
-| Package Manager | |
-| Test Runner | |
-| Build Tool | |
+| Language | Python 3.12 |
+| Framework | FastAPI 0.115+ |
+| Database | PostgreSQL 16 |
+| Queue | Redis 7 + arq |
+| Validation | Pydantic v2 |
+| Expression Engine | Jinja2 (SandboxedEnvironment) |
+| Test Runner | pytest + httpx + pytest-asyncio |
+| ORM | SQLAlchemy (async) |
+| Migrations | Alembic |
+| HTTP Client | httpx (async) |
+| Logging | structlog |
+| Containerization | Docker + Docker Compose |
+| Hosting | Docker on Hetzner VPS behind Traefik |
 
 ## Project Structure
 
 ```
-project-name/
-├── [populated by bootstrap/retrofit from PRD Section 9 or codebase scan]
+workflow-automation-engine/
+├── src/
+│   ├── main.py                          # FastAPI app entry point
+│   ├── config.py                        # Environment config loader
+│   ├── engine/
+│   │   ├── orchestrator.py              # DAG execution orchestrator
+│   │   ├── parser.py                    # Workflow definition parser + cycle detection
+│   │   ├── state.py                     # State machine for execution/step transitions
+│   │   └── context.py                   # Shared execution context management
+│   ├── steps/
+│   │   ├── base.py                      # Abstract step executor
+│   │   ├── http.py                      # HTTP API call step
+│   │   ├── transform.py                 # Jinja2 data transformation step
+│   │   ├── condition.py                 # Conditional branching step
+│   │   ├── delay.py                     # Wait/delay step
+│   │   └── sub_workflow.py              # Nested workflow step
+│   ├── triggers/
+│   │   ├── webhook.py                   # Webhook receiver + HMAC validation
+│   │   ├── cron.py                      # APScheduler cron trigger
+│   │   └── manual.py                    # Manual execution trigger
+│   ├── queue/
+│   │   ├── worker.py                    # arq worker configuration
+│   │   └── tasks.py                     # Step execution task definitions
+│   ├── replay/
+│   │   └── service.py                   # Execution replay logic
+│   ├── tenants/
+│   │   ├── service.py                   # Tenant registration, lookup, key validation
+│   │   ├── models.py                    # Tenant Pydantic models
+│   │   └── seed.py                      # First-run seed script
+│   ├── api/
+│   │   ├── workflows.py                 # Workflow CRUD routes
+│   │   ├── executions.py                # Execution routes + SSE stream
+│   │   ├── webhooks.py                  # Webhook receiver route
+│   │   ├── tenants.py                   # Tenant registration + profile routes
+│   │   ├── metrics.py                   # Execution metrics route
+│   │   ├── health.py                    # Health check route
+│   │   └── middleware/
+│   │       ├── auth.py                  # API key validation + tenant context
+│   │       ├── rate_limit.py            # Rate limiting
+│   │       └── errors.py               # Error response formatting
+│   ├── db/
+│   │   ├── postgres.py                  # Async SQLAlchemy connection
+│   │   ├── redis.py                     # Redis client (arq + cache)
+│   │   └── migrations/
+│   │       └── alembic/                 # Alembic migration scripts
+│   └── lib/
+│       ├── logger.py                    # structlog configuration
+│       ├── expressions.py               # Jinja2 sandboxed evaluator
+│       └── utils.py                     # Shared utilities
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── fixtures/
+│       ├── workflows/                   # Sample workflow definitions
+│       └── http_responses/              # Mocked HTTP step responses
+├── docker-compose.yml
+├── Dockerfile
+├── pyproject.toml
+├── alembic.ini
+└── .env.example
 ```
 
 ## Key Modules
 
 | Module | Purpose | Key Files |
 |--------|---------|-----------|
-| | | |
+| Engine | DAG execution orchestrator, parser, state machine | `src/engine/` |
+| Steps | Step type executors (http, transform, condition, delay, sub_workflow) | `src/steps/` |
+| Triggers | Webhook, cron, manual execution triggers | `src/triggers/` |
+| Queue | arq worker + async job dispatch for step execution | `src/queue/` |
+| Replay | Execution replay with original/modified trigger data | `src/replay/` |
+| Tenants | Multi-tenant lifecycle — registration, key validation, seed | `src/tenants/` |
+| API | FastAPI route handlers + middleware (auth, rate limit, errors) | `src/api/` |
+| DB | Async SQLAlchemy (PostgreSQL) + Redis client | `src/db/` |
+| Lib | Shared utilities — Jinja2 sandboxed expressions, structlog, helpers | `src/lib/` |
 
 ## Database Schema
 
 | Table | Purpose | Key Fields |
 |-------|---------|-----------|
-| | | |
+| tenants | Tenant accounts with API key auth | id, name, api_key_hash, api_key_prefix, is_active |
+| workflows | DAG workflow definitions with trigger config | id, tenant_id, name, trigger_type, steps (JSONB), webhook_path |
+| executions | Workflow execution runs with shared context | id, tenant_id, workflow_id, status, context (JSONB), replayed_from |
+| step_executions | Individual step runs within an execution | id, tenant_id, execution_id, step_id, step_type, status, input/output (JSONB) |
+| execution_logs | Structured logs per execution/step | id, tenant_id, execution_id, step_id, level, message |
+| webhook_deliveries | Inbound webhook request log | id, tenant_id, workflow_id, execution_id, method, payload (JSONB), status |
 
 ## External Integrations
 
 | Service | Purpose | Auth Method |
 |---------|---------|------------|
-| | | |
+| PostgreSQL 16 | Durable state, JSONB for step data, RLS for tenant isolation | Connection string |
+| Redis 7 | arq task queue for async step execution | Connection string |
+| External APIs (via http steps) | User-configured HTTP calls in workflow steps | Per-step config (headers/tokens) |
+| BetterStack | Uptime monitoring via /api/health | N/A |
 
 ## Environment Variables
 
 | Variable | Purpose | Source |
 |----------|---------|--------|
-| | | |
+| DATABASE_URL | PostgreSQL connection (asyncpg) | .env |
+| REDIS_URL | Redis connection | .env |
+| SELF_REGISTRATION_ENABLED | Allow public tenant registration | .env |
+| DEFAULT_TENANT_NAME | Name for auto-created first-run tenant | .env |
+| MAX_STEPS_PER_WORKFLOW | Workflow complexity limit (default 50) | .env |
+| EXECUTION_TIMEOUT_SECONDS | Max execution time (default 300) | .env |
+| HTTP_STEP_TIMEOUT | HTTP step timeout (default 30s) | .env |
+| ARQ_CONCURRENCY | Worker concurrency (default 10) | .env |
+| CRON_TIMEZONE | Scheduler timezone (default UTC) | .env |
 
 ## Commands
 
 | Action | Command |
 |--------|---------|
-| Dev server | |
-| Run tests | |
-| Lint/check | |
-| Build | |
-| Migrate DB | |
+| Dev server | `uvicorn src.main:app --reload` |
+| Run tests | `python -m pytest` |
+| Run unit tests | `python -m pytest tests/unit/` |
+| Run integration tests | `python -m pytest tests/integration/ -m integration` |
+| Lint/check | `ruff check .` |
+| Format | `ruff format .` |
+| Type check | `mypy src/` |
+| Migrate DB | `alembic upgrade head` |
+| New migration | `alembic revision --autogenerate -m "description"` |
+| Start worker | `arq src.queue.worker.WorkerSettings` |
+| Seed tenant | `python -m src.tenants.seed` |
+
+## Tenant Model
+
+- **Strategy:** API key per tenant (`X-API-Key` header)
+- **Table:** `tenants` (id, name, api_key_hash, api_key_prefix, is_active)
+- **Key format:** `wae_live_<random 32 hex chars>`
+- **Middleware:** `src/api/middleware/auth.py` — validates key, injects tenant_id into request state
+- **Isolation:** All queries scoped by tenant_id + PostgreSQL RLS as safety net
 
 ## Key Patterns & Conventions
 
-- File naming: 
-- Component structure: 
-- Import conventions: 
-- Error handling approach: 
+- File naming: `snake_case.py`
+- Async everywhere: all handlers, DB, HTTP calls use async/await
+- Import order: stdlib → third-party → local (blank lines between)
+- Error format: `{ "error": { "code": "...", "message": "...", "details": [...] } }`
+- Pagination: cursor-based (`cursor` + `limit` params, default 25, max 100)
+- Jinja2: always SandboxedEnvironment, never default Environment
+- State transitions: persist to DB before execution proceeds
 
 ## Gotchas & Lessons Learned
 
 > Discovered during implementation. Added automatically by `/implement-next` Step 9.3.
-> These prevent the same mistakes from being repeated across sessions.
 
 | Date | Area | Gotcha | Discovered In |
 |------|------|--------|---------------|
-| | | | |
+| 2026-04-01 | testing | Session-scoped async fixtures (asyncpg pool) fail with pytest-asyncio — event loop mismatch. Use function-scoped fixtures for async DB/Redis connections. | Phase 0: Testing infrastructure |
+| 2026-04-01 | infra | Ports 5432/6379 conflict with other ecosystem projects. This project uses 5435 (PG) and 6380 (Redis). | Phase 0: Local service infrastructure |
 
 ## Shared Foundation (MUST READ before any implementation)
 
 > These files define the project's shared patterns, configuration, and utilities.
-> The AI MUST read these **in full** before writing ANY new code. Never recreate what exists here.
-> Populated by `/bootstrap` (from PRD) or `/retrofit` (from codebase scan). Updated by `/sync-context`.
+> The AI MUST read these **in full** before writing ANY new code.
 
 | Category | File(s) | What it establishes |
 |----------|---------|-------------------|
-| | | |
+| Config | `src/config.py` | Environment variable loading with defaults |
+| DB connection | `src/db/postgres.py` | Async SQLAlchemy engine + session factory |
+| Redis connection | `src/db/redis.py` | Redis client for arq + caching |
+| Logging | `src/lib/logger.py` | structlog JSON logging configuration |
+| Expressions | `src/lib/expressions.py` | Jinja2 SandboxedEnvironment evaluator |
+| Auth middleware | `src/api/middleware/auth.py` | API key validation + tenant context injection |
+| Error handling | `src/api/middleware/errors.py` | Consistent error response format |
+| Tenant models | `src/tenants/models.py` | Pydantic models for tenant data |
+| Step base | `src/steps/base.py` | Abstract base class for all step executors |
+| Test fixtures | `tests/conftest.py` | db_session (transactional rollback), redis_client, pg_pool fixtures |
 
 ## Deep References
 
-> For detailed implementation patterns, read the source directly — don't embed here. Keeps this file lean. When `/deep-study` or `/sync-context` runs, it populates this table and **trims** the corresponding embedded sections above to one-line summaries.
+> For detailed implementation patterns, read the source directly.
 
 | Topic | Where to look |
 |-------|--------------|
-| [module name] | `src/[module]/` |
+| DAG execution | `src/engine/` |
+| Step executors | `src/steps/` |
+| Trigger handlers | `src/triggers/` |
+| Queue/workers | `src/queue/` |
+| API routes | `src/api/` |
+| Migrations | `src/db/migrations/alembic/` |
 | Test patterns | `tests/` |
+| Test fixtures | `tests/fixtures/` |

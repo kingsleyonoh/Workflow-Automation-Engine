@@ -1,0 +1,73 @@
+"""FastAPI application entry point for the Workflow Automation Engine.
+
+Creates the FastAPI app with CORS middleware, error handlers, and a
+health check endpoint. Uses lifespan for startup/shutdown hooks.
+"""
+
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from src.api.middleware.errors import (
+    app_error_handler,
+    http_exception_handler,
+    unhandled_exception_handler,
+)
+from src.config import settings
+from src.lib.logger import configure_logging, get_logger
+from src.lib.utils import AppError
+
+logger = get_logger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Application lifespan handler for startup and shutdown events.
+
+    Startup: configure logging, initialize connections (future).
+    Shutdown: close connections and clean up resources (future).
+    """
+    configure_logging()
+    logger.info(
+        "app_startup",
+        env=settings.env,
+        host=settings.host,
+        port=settings.port,
+    )
+    yield
+    logger.info("app_shutdown")
+
+
+app = FastAPI(
+    title="Workflow Automation Engine",
+    description="Backend engine for executing multi-step DAG workflows.",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+# CORS — permissive in development, restrict in production
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"] if settings.is_development else [],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Wire error handlers into the app
+app.add_exception_handler(AppError, app_error_handler)  # type: ignore[arg-type]
+app.add_exception_handler(StarletteHTTPException, http_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(Exception, unhandled_exception_handler)  # type: ignore[arg-type]
+
+
+@app.get("/api/health")
+async def health_check() -> dict[str, str]:
+    """Basic health check endpoint.
+
+    Returns a simple status response. Full health check with DB/Redis
+    connectivity will be implemented in a later batch.
+    """
+    return {"status": "ok"}

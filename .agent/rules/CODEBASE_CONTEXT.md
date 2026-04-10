@@ -1,7 +1,7 @@
 # Workflow Automation Engine — Codebase Context
 
-> Last updated: 2026-04-09
-> Template synced: 2026-04-09
+> Last updated: 2026-04-10
+> Template synced: 2026-04-10
 
 ## Tech Stack
 
@@ -137,6 +137,9 @@ workflow-automation-engine/
 |------|------|--------|---------------|
 | 2026-04-01 | testing | Session-scoped async fixtures (asyncpg pool) fail with pytest-asyncio — event loop mismatch. Use function-scoped fixtures for async DB/Redis connections. | Phase 0: Testing infrastructure |
 | 2026-04-01 | infra | Ports 5432/6379 conflict with other ecosystem projects. This project uses 5435 (PG) and 6380 (Redis). | Phase 0: Local service infrastructure |
+| 2026-04-10 | alembic | Alembic autogenerate uses `typing.Union`/`Sequence` — must update generated files to Python 3.12 `X | Y` syntax to pass ruff UP007/UP035. Updated script.py.mako template. | Phase 1: DB migrations |
+| 2026-04-10 | alembic | Migration tests use subprocess to run `alembic upgrade head` with `DATABASE_URL` env override to target test DB. The env.py reads `os.getenv("DATABASE_URL")` first, falling back to settings. | Phase 1: DB migrations |
+| 2026-04-10 | alembic | Migration integration tests are slow (~5s each due to subprocess + migration) — consider session-scoped fixture or running migrations once per test class in future batches. | Phase 1: DB migrations |
 
 ## Shared Foundation (MUST READ before any implementation)
 
@@ -146,6 +149,7 @@ workflow-automation-engine/
 | Category | File(s) | What it establishes |
 |----------|---------|-------------------|
 | Config | `src/config.py` | Environment variable loading with defaults |
+| DB models | `src/db/models.py` | SQLAlchemy ORM models (Base, Tenant, Workflow) |
 | DB connection | `src/db/postgres.py` | Async SQLAlchemy engine + session factory |
 | Redis connection | `src/db/redis.py` | Redis client for arq + caching |
 | Logging | `src/lib/logger.py` | structlog JSON logging configuration |

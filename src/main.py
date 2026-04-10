@@ -17,6 +17,8 @@ from src.api.middleware.errors import (
     unhandled_exception_handler,
 )
 from src.config import settings
+from src.db.postgres import dispose_engine
+from src.db.redis import close_redis
 from src.lib.logger import configure_logging, get_logger
 from src.lib.utils import AppError
 
@@ -39,6 +41,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
     yield
     logger.info("app_shutdown")
+    await dispose_engine()
+    await close_redis()
 
 
 app = FastAPI(

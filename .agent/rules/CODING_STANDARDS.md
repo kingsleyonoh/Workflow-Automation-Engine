@@ -1,6 +1,6 @@
 # Workflow Automation Engine — Coding Standards
 
-> Part 1 of 3. Also loaded: `CODING_STANDARDS_TESTING.md`, `CODING_STANDARDS_DOMAIN.md`
+> Part 1 of 4. Also loaded: `CODING_STANDARDS_TESTING.md`, `CODING_STANDARDS_TESTING_LIVE.md`, `CODING_STANDARDS_DOMAIN.md`
 
 These rules are ALWAYS ACTIVE. Follow them on every response without being asked.
 
@@ -11,6 +11,16 @@ These rules are ALWAYS ACTIVE. Follow them on every response without being asked
 - **When creating a NEW workflow file**, ALWAYS add it to `PIPELINE.md` with its "When Done, Suggest" message.
 - **When deleting a workflow file**, ALWAYS remove it from `PIPELINE.md`.
 - `PIPELINE.md` must ALWAYS match the actual files in `.agent/workflows/`. If they're out of sync, fix `PIPELINE.md` immediately.
+
+## Workflow Approval Gates (CRITICAL — Prevents Plan Mode Errors)
+When a workflow step says "present to user", "wait for approval", or "approve before proceeding":
+1. Present the content directly as **formatted text in the conversation**.
+2. End with a clear question: `Approve? [yes / no / edit]`
+3. Wait for the user's response before proceeding to the next step.
+4. **NEVER call `ExitPlanMode` or `EnterPlanMode`** during workflow execution. These are Claude Code built-in tools for a separate system (toggled via `Shift+Tab`). Workflow approval gates are handled through direct conversation.
+5. **NEVER write to `.claude/plans/`** during workflow execution — that directory is reserved for Claude Code's built-in plan mode.
+
+This applies to ALL approval gates: batch selection, implementation plans, RED/GREEN/REGRESSION evidence, commit approval, refactor plans, and any other "present and wait" step in any workflow.
 
 ## Domain-Specific Rules
 
@@ -97,6 +107,13 @@ chore(config): add arq worker settings to .env.example
 - **NEVER say "done" or "all tests pass" without actually running the tests** and showing the output.
 - **NEVER say "this follows the spec" without having read the relevant section** in this session.
 - If you haven't read a file in this conversation, you don't know what's in it. Read it first.
+
+### Respect .gitignore (CRITICAL — Prevents Accidental Exposure)
+- **NEVER run `git add -f` on ANY file.** If a file is gitignored, it is gitignored ON PURPOSE.
+- `docs/progress.md`, `docs/build-journal.md`, `docs/architect_journal.md`, `.agent/workflows/`, `.agent/guides/`, `.agent/agents/`, `.agent/.last-sync`, `.yolo/`, and PRD files are LOCAL working files. They must NEVER be committed.
+- **Proprietary files are tracked during development** so all platforms can reference them. `.gitignore` has commented-out entries marked `⚠️ TRACKED DURING DEV` — this is the default. Run `/prepare-public` before making the repo public.
+- If `git status` doesn't show a file as staged after `git add .`, that means `.gitignore` is working correctly. **Do not "fix" it.**
+- The ONLY acceptable staging command is `git add .` (which respects `.gitignore`).
 
 ### Full Read Rule (CRITICAL — Prevents Context Loss)
 - **When ANY workflow instructs you to "read" a file, you MUST read the ENTIRE file from first line to last line.**

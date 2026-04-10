@@ -1,7 +1,7 @@
 # Workflow Automation Engine — Codebase Context
 
-> Last updated: 2026-04-01
-> Template synced: 2026-03-31
+> Last updated: 2026-04-09
+> Template synced: 2026-04-09
 
 ## Tech Stack
 
@@ -26,59 +26,19 @@
 ```
 workflow-automation-engine/
 ├── src/
-│   ├── main.py                          # FastAPI app entry point
-│   ├── config.py                        # Environment config loader
-│   ├── engine/
-│   │   ├── orchestrator.py              # DAG execution orchestrator
-│   │   ├── parser.py                    # Workflow definition parser + cycle detection
-│   │   ├── state.py                     # State machine for execution/step transitions
-│   │   └── context.py                   # Shared execution context management
-│   ├── steps/
-│   │   ├── base.py                      # Abstract step executor
-│   │   ├── http.py                      # HTTP API call step
-│   │   ├── transform.py                 # Jinja2 data transformation step
-│   │   ├── condition.py                 # Conditional branching step
-│   │   ├── delay.py                     # Wait/delay step
-│   │   └── sub_workflow.py              # Nested workflow step
-│   ├── triggers/
-│   │   ├── webhook.py                   # Webhook receiver + HMAC validation
-│   │   ├── cron.py                      # APScheduler cron trigger
-│   │   └── manual.py                    # Manual execution trigger
-│   ├── queue/
-│   │   ├── worker.py                    # arq worker configuration
-│   │   └── tasks.py                     # Step execution task definitions
-│   ├── replay/
-│   │   └── service.py                   # Execution replay logic
-│   ├── tenants/
-│   │   ├── service.py                   # Tenant registration, lookup, key validation
-│   │   ├── models.py                    # Tenant Pydantic models
-│   │   └── seed.py                      # First-run seed script
-│   ├── api/
-│   │   ├── workflows.py                 # Workflow CRUD routes
-│   │   ├── executions.py                # Execution routes + SSE stream
-│   │   ├── webhooks.py                  # Webhook receiver route
-│   │   ├── tenants.py                   # Tenant registration + profile routes
-│   │   ├── metrics.py                   # Execution metrics route
-│   │   ├── health.py                    # Health check route
-│   │   └── middleware/
-│   │       ├── auth.py                  # API key validation + tenant context
-│   │       ├── rate_limit.py            # Rate limiting
-│   │       └── errors.py               # Error response formatting
-│   ├── db/
-│   │   ├── postgres.py                  # Async SQLAlchemy connection
-│   │   ├── redis.py                     # Redis client (arq + cache)
-│   │   └── migrations/
-│   │       └── alembic/                 # Alembic migration scripts
-│   └── lib/
-│       ├── logger.py                    # structlog configuration
-│       ├── expressions.py               # Jinja2 sandboxed evaluator
-│       └── utils.py                     # Shared utilities
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── fixtures/
-│       ├── workflows/                   # Sample workflow definitions
-│       └── http_responses/              # Mocked HTTP step responses
+│   ├── main.py            # FastAPI app entry point
+│   ├── config.py          # Environment config loader
+│   ├── engine/            # orchestrator, parser, state, context
+│   ├── steps/             # base, http, transform, condition, delay, sub_workflow
+│   ├── triggers/          # webhook, cron, manual
+│   ├── queue/             # worker, tasks (arq)
+│   ├── replay/            # service
+│   ├── tenants/           # service, models, seed
+│   ├── api/               # workflows, executions, webhooks, tenants, metrics, health
+│   │   └── middleware/    # auth, rate_limit, errors
+│   ├── db/                # postgres, redis, migrations/alembic
+│   └── lib/               # logger, expressions, utils
+├── tests/                 # unit/, integration/, e2e/, fixtures/
 ├── docker-compose.yml
 ├── Dockerfile
 ├── pyproject.toml
@@ -122,17 +82,17 @@ workflow-automation-engine/
 
 ## Environment Variables
 
-| Variable | Purpose | Source |
-|----------|---------|--------|
-| DATABASE_URL | PostgreSQL connection (asyncpg) | .env |
-| REDIS_URL | Redis connection | .env |
-| SELF_REGISTRATION_ENABLED | Allow public tenant registration | .env |
-| DEFAULT_TENANT_NAME | Name for auto-created first-run tenant | .env |
-| MAX_STEPS_PER_WORKFLOW | Workflow complexity limit (default 50) | .env |
-| EXECUTION_TIMEOUT_SECONDS | Max execution time (default 300) | .env |
-| HTTP_STEP_TIMEOUT | HTTP step timeout (default 30s) | .env |
-| ARQ_CONCURRENCY | Worker concurrency (default 10) | .env |
-| CRON_TIMEZONE | Scheduler timezone (default UTC) | .env |
+| Variable | Purpose |
+|----------|---------|
+| DATABASE_URL | PostgreSQL connection (asyncpg) |
+| REDIS_URL | Redis connection |
+| SELF_REGISTRATION_ENABLED | Allow public tenant registration |
+| DEFAULT_TENANT_NAME | Name for auto-created first-run tenant |
+| MAX_STEPS_PER_WORKFLOW | Workflow complexity limit (default 50) |
+| EXECUTION_TIMEOUT_SECONDS | Max execution time (default 300) |
+| HTTP_STEP_TIMEOUT | HTTP step timeout (default 30s) |
+| ARQ_CONCURRENCY | Worker concurrency (default 10) |
+| CRON_TIMEZONE | Scheduler timezone (default UTC) |
 
 ## Commands
 
@@ -142,6 +102,7 @@ workflow-automation-engine/
 | Run tests | `python -m pytest` |
 | Run unit tests | `python -m pytest tests/unit/` |
 | Run integration tests | `python -m pytest tests/integration/ -m integration` |
+| E2E tests | `python -m pytest tests/e2e/ -m e2e` |
 | Lint/check | `ruff check .` |
 | Format | `ruff format .` |
 | Type check | `mypy src/` |

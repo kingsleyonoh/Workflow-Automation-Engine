@@ -1,0 +1,98 @@
+# OpenAPI 3.1 — Workflow Automation Engine
+# Populated from PRD Section 8b. Kept in sync by /sync-context.
+openapi: "3.1.0"
+info:
+  title: "Workflow Automation Engine API"
+  description: "Multi-tenant backend engine that executes multi-step workflows defined as DAGs with HTTP triggers, conditional branching, and retry logic."
+  version: "0.1.0"
+  contact:
+    name: Kingsley Onoh
+    url: https://kingsleyonoh.com
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://wae.kingsleyonoh.com
+    description: Production (Hetzner VPS)
+security:
+  - ApiKeyAuth: []
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    WebhookSignature:
+      type: apiKey
+      in: header
+      name: X-Webhook-Signature
+paths:
+  /api/tenants/register:
+    post:
+      summary: Register a new tenant (self-service)
+      description: Creates a tenant and returns a one-time API key. Guarded by SELF_REGISTRATION_ENABLED env var.
+      security: []
+      tags: [tenants]
+  /api/tenants/me:
+    get:
+      summary: Get current tenant profile
+      tags: [tenants]
+  /api/workflows:
+    get:
+      summary: List workflows (cursor-paginated)
+      tags: [workflows]
+    post:
+      summary: Create a workflow (DAG definition)
+      tags: [workflows]
+  /api/workflows/{id}:
+    get:
+      summary: Read workflow
+      tags: [workflows]
+    put:
+      summary: Update workflow
+      tags: [workflows]
+    delete:
+      summary: Delete workflow
+      tags: [workflows]
+  /api/workflows/{id}/execute:
+    post:
+      summary: Manually execute a workflow
+      tags: [workflows]
+  /api/executions:
+    get:
+      summary: List executions (filters status, workflow_id, created_after, created_before)
+      tags: [executions]
+  /api/executions/{id}:
+    get:
+      summary: Read execution with step runs
+      tags: [executions]
+  /api/executions/{id}/stream:
+    get:
+      summary: SSE stream of step status updates
+      tags: [executions]
+  /api/executions/{id}/cancel:
+    post:
+      summary: Cancel a running execution
+      tags: [executions]
+  /api/executions/{id}/replay:
+    post:
+      summary: Replay execution with original or modified trigger data
+      tags: [executions]
+  /api/executions/{id}/logs:
+    get:
+      summary: Structured logs for an execution
+      tags: [executions]
+  /webhooks/{path}:
+    post:
+      summary: Inbound webhook trigger (HMAC-SHA256 signed)
+      security:
+        - WebhookSignature: []
+      tags: [webhooks]
+  /api/metrics/executions:
+    get:
+      summary: Aggregate execution metrics
+      tags: [metrics]
+  /api/health:
+    get:
+      summary: Liveness check (pg, redis, workers)
+      security: []
+      tags: [health]

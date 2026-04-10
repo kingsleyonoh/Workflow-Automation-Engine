@@ -1,0 +1,74 @@
+# Workflow Automation Engine
+
+> A backend engine that executes multi-step workflows defined as directed acyclic graphs (DAGs). Multi-tenant, self-hosted, Python/FastAPI.
+
+## What This Does
+
+Executes workflows built as DAGs with HTTP triggers (webhooks), conditional branching, data transformations, external API calls, delays, and retry logic. Handles execution state, parallel step execution, error recovery, and real-time status updates via SSE. Think n8n / Zapier / Temporal as the backend — purpose-built, self-hosted, and designed to prove you can build automation infrastructure, not just use it.
+
+## Who This Is For
+
+- Developers who need durable workflow execution without adopting a heavyweight orchestrator.
+- Teams who want webhook → DAG execution with tenant isolation baked in.
+- Self-hosters who prefer Docker + PostgreSQL + Redis over SaaS dependencies.
+
+## Quick Start
+
+1. Clone: `git clone https://github.com/kingsleyonoh/Workflow-Automation-Engine.git`
+2. Install: `pip install -e ".[dev]"` (inside an active venv)
+3. Configure: `cp .env.example .env` — fill in DATABASE_URL, REDIS_URL, etc.
+4. Start services: `docker compose up -d` (PostgreSQL on :5435, Redis on :6380)
+5. Migrate: `alembic upgrade head`
+6. Run: `uvicorn src.main:app --reload`
+7. Worker: `arq src.queue.worker.WorkerSettings`
+
+## API Surface
+
+Base URL: `http://localhost:8000` — auth via `X-API-Key` header (issued at tenant registration).
+
+**Tenants**
+- `POST /api/tenants/register` — create tenant (returns one-time API key)
+- `GET /api/tenants/me` — current tenant profile
+
+**Workflows**
+- `POST /api/workflows` — create workflow (DAG definition)
+- `GET /api/workflows` — list workflows (cursor-paginated)
+- `GET /api/workflows/{id}` — read workflow
+- `PUT /api/workflows/{id}` — update workflow
+- `DELETE /api/workflows/{id}` — delete workflow
+- `POST /api/workflows/{id}/execute` — manual execution
+
+**Executions**
+- `GET /api/executions` — list executions (filters: status, workflow_id, date)
+- `GET /api/executions/{id}` — read execution + step runs
+- `GET /api/executions/{id}/stream` — SSE stream of step status updates
+- `POST /api/executions/{id}/cancel` — cancel running execution
+- `POST /api/executions/{id}/replay` — replay with original or modified trigger data
+- `GET /api/executions/{id}/logs` — structured logs for an execution
+
+**Webhooks**
+- `POST /webhooks/{path}` — inbound webhook trigger (HMAC-SHA256 signed)
+
+**Metrics + Health**
+- `GET /api/metrics/executions` — aggregate execution metrics
+- `GET /api/health` — liveness (pg, redis, workers)
+
+Full spec: `./openapi.yaml`
+
+## Integration
+
+- **PostgreSQL 16** — durable state, JSONB for step data, PostgreSQL RLS for tenant isolation
+- **Redis 7 + arq** — async task queue for step execution
+- **External APIs** — invoked via user-configured HTTP steps (per-step auth headers)
+- **BetterStack** — uptime monitoring via `/api/health`
+
+## Architecture
+
+Multi-tenant DAG execution engine. API requests authenticate via API key → resolve tenant → scope every query by `tenant_id`. Workflows are parsed into DAGs (cycle detection, max 50 steps). Execution dispatches each step as an arq job to a worker pool. Shared execution context flows between steps via Jinja2 (SandboxedEnvironment) templates. Every state transition is persisted to PostgreSQL before execution proceeds — crash recovery replays from last persisted state. Webhooks are signed (HMAC) and route to the target workflow by slug.
+
+## Source
+
+- Repository: https://github.com/kingsleyonoh/Workflow-Automation-Engine
+- Documentation: ./README.md
+- API spec: ./openapi.yaml
+- Agent context: ./AGENTS.md

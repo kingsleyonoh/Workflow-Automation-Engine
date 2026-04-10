@@ -39,14 +39,22 @@ htmlcov/
 *.log
 
 # AI Workflow System (proprietary — do not publish)
-.agent/workflows/
-.agent/guides/
+# ⚠️ TRACKED DURING DEV — run /prepare-public before making repo public
+# .agent/workflows/
+# .agent/guides/
+# .agent/agents/
+.agent/.last-sync
 
 # Internal project planning
-docs/progress.md
+# ⚠️ TRACKED DURING DEV — run /prepare-public before making repo public
+# docs/progress.md
+docs/build-journal.md
 docs/architect_journal.md
-docs/*PRD*.md
-docs/*prd*.md
+# docs/*PRD*.md
+# docs/*prd*.md
+
+# YOLO Mode workspace (runtime state, not committed)
+.yolo/
 
 # Multi-agent platform context (auto-generated, not committed)
 CLAUDE.md

@@ -1,0 +1,17 @@
+{
+  "name": "workflow-automation-engine",
+  "version": "0.1.0",
+  "description": "Multi-tenant backend engine that executes multi-step workflows defined as DAGs with HTTP triggers, conditional branching, and retry logic.",
+  "transport": "stdio",
+  "tools": [
+    { "name": "register_tenant", "description": "Create a new tenant and issue an API key (POST /api/tenants/register)" },
+    { "name": "create_workflow", "description": "Create a workflow from a DAG definition (POST /api/workflows)" },
+    { "name": "list_workflows", "description": "List workflows for the authenticated tenant (GET /api/workflows)" },
+    { "name": "execute_workflow", "description": "Manually execute a workflow (POST /api/workflows/{id}/execute)" },
+    { "name": "list_executions", "description": "List executions with status/date filters (GET /api/executions)" },
+    { "name": "stream_execution", "description": "SSE stream of step status updates (GET /api/executions/{id}/stream)" },
+    { "name": "replay_execution", "description": "Replay an execution with original or modified trigger data (POST /api/executions/{id}/replay)" },
+    { "name": "get_execution_logs", "description": "Fetch structured logs for an execution (GET /api/executions/{id}/logs)" },
+    { "name": "get_metrics", "description": "Aggregate execution metrics (GET /api/metrics/executions)" }
+  ]
+}

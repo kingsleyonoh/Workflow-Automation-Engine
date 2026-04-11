@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from src.api.middleware.auth import AuthMiddleware
 from src.api.middleware.errors import (
     app_error_handler,
     http_exception_handler,
@@ -60,6 +61,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Auth middleware — validates X-API-Key header on protected paths
+app.add_middleware(AuthMiddleware)
 
 # Wire error handlers into the app
 app.add_exception_handler(AppError, app_error_handler)  # type: ignore[arg-type]

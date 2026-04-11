@@ -17,6 +17,35 @@ TEST_DATABASE_URL = os.getenv(
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6380")
 
 
+@pytest.fixture(scope="session")
+def _run_migrations():
+    """Run Alembic migrations once per test session (synchronous fixture)."""
+    import subprocess
+
+    env = os.environ.copy()
+    env["DATABASE_URL"] = TEST_DATABASE_URL
+
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    result = subprocess.run(
+        ["alembic", "upgrade", "head"],
+        capture_output=True,
+        text=True,
+        cwd=project_root,
+        env=env,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"Alembic upgrade failed: {result.stderr}")
+    yield
+    # Downgrade after all tests complete
+    subprocess.run(
+        ["alembic", "downgrade", "base"],
+        capture_output=True,
+        text=True,
+        cwd=project_root,
+        env=env,
+    )
+
+
 @pytest.fixture
 async def async_engine():
     """Create a SQLAlchemy async engine for the test database."""
@@ -26,7 +55,7 @@ async def async_engine():
 
 
 @pytest.fixture
-async def db_session(async_engine):
+async def db_session(_run_migrations, async_engine):
     """Provide a transactional database session that rolls back after each test."""
     async with async_engine.connect() as conn:
         transaction = await conn.begin()

@@ -6,8 +6,6 @@ that maps StepType to executor classes.
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from src.engine.models import StepType
 
 

@@ -323,7 +323,8 @@ class TestHttpExecutorValidation:
             result = await executor.execute(config, context)
 
         # Body should be truncated to max_response_body_size
-        assert len(result["body"]) <= 1_048_576 + 100  # small margin for truncation note
+        # Small margin for truncation note
+        assert len(result["body"]) <= 1_048_576 + 100
 
     async def test_connection_error_raises(self):
         """HTTP step raises error on connection failure."""

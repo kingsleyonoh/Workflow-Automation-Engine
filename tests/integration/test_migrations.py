@@ -13,48 +13,6 @@ import pytest
 
 pytestmark = pytest.mark.integration
 
-# Raw asyncpg URL for direct database access
-RAW_TEST_DB_URL = "postgresql://postgres:devpass@localhost:5435/workflows_test"
-
-
-@pytest.fixture
-async def migrated_db():
-    """Run Alembic migrations on the test database, yield pool, then downgrade."""
-    import os
-    import subprocess
-
-    env = os.environ.copy()
-    env["DATABASE_URL"] = (
-        "postgresql+asyncpg://postgres:devpass@localhost:5435/workflows_test"
-    )
-
-    # Run migrations
-    result = subprocess.run(
-        ["alembic", "upgrade", "head"],
-        capture_output=True,
-        text=True,
-        cwd=os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        ),
-        env=env,
-    )
-    assert result.returncode == 0, f"Alembic upgrade failed: {result.stderr}"
-
-    pool = await asyncpg.create_pool(RAW_TEST_DB_URL)
-    yield pool
-    await pool.close()
-
-    # Downgrade to clean up
-    subprocess.run(
-        ["alembic", "downgrade", "base"],
-        capture_output=True,
-        text=True,
-        cwd=os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        ),
-        env=env,
-    )
-
 
 # ─── Tenants Table Tests ────────────────────────────────────────────
 

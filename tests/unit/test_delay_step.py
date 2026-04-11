@@ -39,9 +39,7 @@ class TestDelayExecutorHappyPath:
         """Delay step accepts integer seconds."""
         from src.steps.delay import DelayExecutor
 
-        executor = DelayExecutor()
-        config = {"seconds": 1}
-        context = {"trigger": {"payload": {}}, "steps": {}}
+        DelayExecutor()
         # Just verify it doesn't raise - use very short delay
         # (actual 1s would be too slow for tests, so just check validation)
         # For a real 1s delay test, we'd mock asyncio.sleep
@@ -103,11 +101,9 @@ class TestDelayExecutorValidation:
         """Delay step accepts exactly 3600 seconds (validation only)."""
         from src.steps.delay import DelayExecutor
 
-        executor = DelayExecutor()
+        DelayExecutor()
         # We can't actually wait 3600s in a test, but validate it
         # won't raise a config error. We'll mock the sleep.
-        config = {"seconds": 3600}
-        context = {"trigger": {"payload": {}}, "steps": {}}
         # This would take an hour to actually run; we only test
         # that config validation passes by verifying no STEP_CONFIG_ERROR
         # The actual sleep will be tested with short durations

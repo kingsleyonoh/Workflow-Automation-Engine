@@ -72,14 +72,26 @@ async def on_shutdown(ctx: dict[str, Any]) -> None:
 
 
 class WorkerSettings:
-    """arq worker settings for step execution.
+    """arq worker settings for step execution and background jobs.
 
     Start with: ``arq src.queue.worker.WorkerSettings``
     """
 
+    from arq import cron
+
+    from src.queue.jobs import (
+        cleanup_stale_executions,
+        prune_execution_logs,
+        prune_webhook_deliveries,
+    )
     from src.queue.tasks import execute_step
 
     functions = [execute_step]
+    cron_jobs = [
+        cron(cleanup_stale_executions, minute=0),
+        cron(prune_execution_logs, hour=2, minute=0),
+        cron(prune_webhook_deliveries, hour=3, minute=0),
+    ]
     redis_settings = _parse_redis_url(settings.redis_url)
     max_jobs = settings.arq_concurrency
     on_startup = on_startup

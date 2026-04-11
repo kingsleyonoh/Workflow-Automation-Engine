@@ -50,8 +50,7 @@ async def _create_execution(
     """Helper: insert an execution and return its id."""
     exec_id = uuid.uuid4()
     await conn.execute(
-        "INSERT INTO executions (id, tenant_id, workflow_id) "
-        "VALUES ($1, $2, $3)",
+        "INSERT INTO executions (id, tenant_id, workflow_id) VALUES ($1, $2, $3)",
         exec_id,
         tenant_id,
         workflow_id,

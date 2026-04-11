@@ -50,8 +50,7 @@ async def _create_execution(
     """Helper: insert an execution and return its id."""
     exec_id = uuid.uuid4()
     await conn.execute(
-        "INSERT INTO executions (id, tenant_id, workflow_id) "
-        "VALUES ($1, $2, $3)",
+        "INSERT INTO executions (id, tenant_id, workflow_id) VALUES ($1, $2, $3)",
         exec_id,
         tenant_id,
         workflow_id,
@@ -329,9 +328,7 @@ class TestExecutionsTable:
                 None,
                 1500,
             )
-            row = await conn.fetchrow(
-                "SELECT * FROM executions WHERE id = $1", exec_id
-            )
+            row = await conn.fetchrow("SELECT * FROM executions WHERE id = $1", exec_id)
         assert row["status"] == "completed"
         assert row["duration_ms"] == 1500
 
@@ -622,8 +619,7 @@ class TestStepExecutionsTable:
             )
         index_defs = {r["indexname"]: r["indexdef"] for r in indexes}
         assert any(
-            "tenant_id" in defn and "status" in defn
-            for defn in index_defs.values()
+            "tenant_id" in defn and "status" in defn for defn in index_defs.values()
         )
 
     async def test_step_executions_happy_path(self, migrated_db):

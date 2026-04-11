@@ -99,10 +99,7 @@ class HttpExecutor(BaseStepExecutor):
         # Capture response body with size limit
         response_body = response.text
         if len(response_body) > MAX_RESPONSE_BODY_SIZE:
-            response_body = (
-                response_body[:MAX_RESPONSE_BODY_SIZE]
-                + "... [truncated]"
-            )
+            response_body = response_body[:MAX_RESPONSE_BODY_SIZE] + "... [truncated]"
 
         response_headers = dict(response.headers)
 
@@ -115,10 +112,12 @@ class HttpExecutor(BaseStepExecutor):
                     f"{response_body[:200]}"
                 ),
                 status_code=502,
-                details=[{
-                    "status_code": response.status_code,
-                    "body": response_body[:500],
-                }],
+                details=[
+                    {
+                        "status_code": response.status_code,
+                        "body": response_body[:500],
+                    }
+                ],
             )
 
         return {
@@ -129,9 +128,7 @@ class HttpExecutor(BaseStepExecutor):
         }
 
 
-def _render_headers(
-    headers: dict[str, str], context: dict[str, Any]
-) -> dict[str, str]:
+def _render_headers(headers: dict[str, str], context: dict[str, Any]) -> dict[str, str]:
     """Evaluate Jinja2 templates in header values.
 
     Args:
@@ -143,10 +140,7 @@ def _render_headers(
     """
     if not headers:
         return {}
-    return {
-        key: evaluate_expression(value, context)
-        for key, value in headers.items()
-    }
+    return {key: evaluate_expression(value, context) for key, value in headers.items()}
 
 
 def _render_body(body: str | None, context: dict[str, Any]) -> str | None:

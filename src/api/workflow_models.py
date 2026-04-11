@@ -29,13 +29,9 @@ class WorkflowCreateRequest(BaseModel):
 class WorkflowUpdateRequest(BaseModel):
     """Request body for updating a workflow. All fields optional."""
 
-    name: str | None = Field(
-        default=None, min_length=1, max_length=200
-    )
+    name: str | None = Field(default=None, min_length=1, max_length=200)
     description: str | None = None
-    trigger_type: str | None = Field(
-        default=None, pattern=r"^(webhook|cron|manual)$"
-    )
+    trigger_type: str | None = Field(default=None, pattern=r"^(webhook|cron|manual)$")
     trigger_config: dict[str, Any] | None = None
     steps: list[dict[str, Any]] | None = None
     is_active: bool | None = None
@@ -84,9 +80,7 @@ def workflow_to_response(wf: Workflow) -> WorkflowResponse:
     )
 
 
-def encode_cursor(
-    created_at: datetime, wf_id: uuid.UUID
-) -> str:
+def encode_cursor(created_at: datetime, wf_id: uuid.UUID) -> str:
     """Encode a pagination cursor from created_at + workflow id."""
     raw = f"{created_at.isoformat()}|{wf_id}"
     return base64.urlsafe_b64encode(raw.encode()).decode()

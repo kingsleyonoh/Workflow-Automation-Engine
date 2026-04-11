@@ -27,10 +27,11 @@ ALLOWED_EXECUTION_TRANSITIONS: dict[str, set[str]] = {
 
 # Step: pending -> queued -> running -> completed/failed/skipped
 # failed -> queued is allowed for retries
+# pending/queued/running -> skipped is allowed for cancellation
 ALLOWED_STEP_TRANSITIONS: dict[str, set[str]] = {
     "pending": {"queued", "skipped"},
-    "queued": {"running"},
-    "running": {"completed", "failed"},
+    "queued": {"running", "skipped"},
+    "running": {"completed", "failed", "skipped"},
     "completed": set(),
     "failed": {"queued"},
     "skipped": set(),

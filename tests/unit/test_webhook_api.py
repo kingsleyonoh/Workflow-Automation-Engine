@@ -76,14 +76,13 @@ def patched_app(test_session_factory, redis_client):
 @pytest.fixture
 async def webhook_workflow(test_session_factory):
     """Create a webhook-triggered workflow and return it."""
-    import bcrypt
     import secrets
+
+    import bcrypt
 
     async with test_session_factory() as session:
         api_key = f"wae_live_{secrets.token_hex(16)}"
-        api_key_hash = bcrypt.hashpw(
-            api_key.encode(), bcrypt.gensalt()
-        ).decode()
+        api_key_hash = bcrypt.hashpw(api_key.encode(), bcrypt.gensalt()).decode()
 
         tenant = Tenant(
             name="Webhook Test Tenant",
@@ -126,14 +125,13 @@ async def webhook_workflow(test_session_factory):
 @pytest.fixture
 async def webhook_workflow_with_secret(test_session_factory):
     """Create a webhook workflow with HMAC secret."""
-    import bcrypt
     import secrets
+
+    import bcrypt
 
     async with test_session_factory() as session:
         api_key = f"wae_live_{secrets.token_hex(16)}"
-        api_key_hash = bcrypt.hashpw(
-            api_key.encode(), bcrypt.gensalt()
-        ).decode()
+        api_key_hash = bcrypt.hashpw(api_key.encode(), bcrypt.gensalt()).decode()
 
         tenant = Tenant(
             name="HMAC Tenant",
@@ -210,9 +208,7 @@ class TestWebhookReceive:
 
         # Verify delivery was logged
         async with test_session_factory() as session:
-            stmt = select(WebhookDelivery).where(
-                WebhookDelivery.workflow_id == wf.id
-            )
+            stmt = select(WebhookDelivery).where(WebhookDelivery.workflow_id == wf.id)
             result = await session.execute(stmt)
             delivery = result.scalar_one_or_none()
 
@@ -240,9 +236,7 @@ class TestWebhookReceive:
 
         # Verify execution has the payload as trigger_data
         async with test_session_factory() as session:
-            stmt = select(Execution).where(
-                Execution.id == exec_id
-            )
+            stmt = select(Execution).where(Execution.id == exec_id)
             result = await session.execute(stmt)
             execution = result.scalar_one_or_none()
 
@@ -273,14 +267,13 @@ class TestWebhookInactive:
         self, patched_app, test_session_factory
     ):
         """POST /webhooks/:path for inactive workflow returns 404."""
-        import bcrypt
         import secrets
+
+        import bcrypt
 
         async with test_session_factory() as session:
             api_key = f"wae_live_{secrets.token_hex(16)}"
-            api_key_hash = bcrypt.hashpw(
-                api_key.encode(), bcrypt.gensalt()
-            ).decode()
+            api_key_hash = bcrypt.hashpw(api_key.encode(), bcrypt.gensalt()).decode()
 
             tenant = Tenant(
                 name="Inactive Tenant",
@@ -318,9 +311,7 @@ class TestWebhookInactive:
                 await session.execute(
                     delete(Workflow).where(Workflow.id == workflow.id)
                 )
-                await session.execute(
-                    delete(Tenant).where(Tenant.id == tenant.id)
-                )
+                await session.execute(delete(Tenant).where(Tenant.id == tenant.id))
                 await session.commit()
 
 
@@ -413,9 +404,7 @@ class TestWebhookHMAC:
             )
 
         async with test_session_factory() as session:
-            stmt = select(WebhookDelivery).where(
-                WebhookDelivery.workflow_id == wf.id
-            )
+            stmt = select(WebhookDelivery).where(WebhookDelivery.workflow_id == wf.id)
             result = await session.execute(stmt)
             delivery = result.scalar_one_or_none()
 

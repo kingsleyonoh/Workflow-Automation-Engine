@@ -22,9 +22,7 @@ def start_server() -> subprocess.Popen:
     env["ENV"] = "testing"
 
     project_root = os.path.dirname(
-        os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        )
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     )
     venv_python = os.path.join(project_root, "venv", "Scripts", "python.exe")
 

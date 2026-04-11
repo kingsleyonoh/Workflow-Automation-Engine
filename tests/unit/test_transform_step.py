@@ -66,9 +66,7 @@ class TestTransformExecutor:
         from src.steps.transform import TransformExecutor
 
         executor = TransformExecutor()
-        config = {
-            "expression": "{{ trigger.payload.tags | join(', ') }}"
-        }
+        config = {"expression": "{{ trigger.payload.tags | join(', ') }}"}
         context = {
             "trigger": {"payload": {"tags": ["a", "b", "c"]}},
         }

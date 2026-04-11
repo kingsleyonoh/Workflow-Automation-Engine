@@ -168,10 +168,7 @@ class TestHttpExecutorTemplating:
             )
             await executor.execute(config, context)
 
-        assert (
-            route.calls[0].request.headers["Authorization"]
-            == "Bearer secret123"
-        )
+        assert route.calls[0].request.headers["Authorization"] == "Bearer secret123"
 
     async def test_jinja2_in_body(self):
         """HTTP step evaluates Jinja2 in request body."""

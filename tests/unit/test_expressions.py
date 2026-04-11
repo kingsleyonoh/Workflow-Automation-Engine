@@ -46,9 +46,7 @@ class TestBasicExpressions:
         """Jinja2 default filter works for missing variables."""
         from src.lib.expressions import evaluate_expression
 
-        result = evaluate_expression(
-            "{{ missing | default('fallback') }}", {}
-        )
+        result = evaluate_expression("{{ missing | default('fallback') }}", {})
         assert result == "fallback"
 
 
@@ -66,9 +64,7 @@ class TestStepContextExpressions:
                 }
             }
         }
-        result = evaluate_expression(
-            "{{ steps.fetch_user.output.user_id }}", ctx
-        )
+        result = evaluate_expression("{{ steps.fetch_user.output.user_id }}", ctx)
         assert result == "42"
 
     def test_step_output_nested_field(self):
@@ -118,9 +114,7 @@ class TestTriggerContextExpressions:
                 "payload": {"event": "push", "repo": "my-repo"},
             }
         }
-        result = evaluate_expression(
-            "{{ trigger.payload.event }}", ctx
-        )
+        result = evaluate_expression("{{ trigger.payload.event }}", ctx)
         assert result == "push"
 
     def test_trigger_payload_nested(self):
@@ -134,9 +128,7 @@ class TestTriggerContextExpressions:
                 }
             }
         }
-        result = evaluate_expression(
-            "{{ trigger.payload.sender.login }}", ctx
-        )
+        result = evaluate_expression("{{ trigger.payload.sender.login }}", ctx)
         assert result == "octocat"
 
 
@@ -175,9 +167,7 @@ class TestSSTIPrevention:
         from src.lib.expressions import evaluate_expression
 
         with pytest.raises(AppError) as exc_info:
-            evaluate_expression(
-                "{{ ''.__class__.__mro__[1].__subclasses__() }}", {}
-            )
+            evaluate_expression("{{ ''.__class__.__mro__[1].__subclasses__() }}", {})
         assert exc_info.value.code == "EXPRESSION_ERROR"
 
     def test_cannot_access_os_module(self):
@@ -186,9 +176,7 @@ class TestSSTIPrevention:
 
         # This should either raise or return a safe string, never execute
         with pytest.raises(AppError):
-            evaluate_expression(
-                "{{ config.__class__.__init__.__globals__['os'] }}", {}
-            )
+            evaluate_expression("{{ config.__class__.__init__.__globals__['os'] }}", {})
 
     def test_cannot_call_dangerous_builtins(self):
         """Built-in functions like eval are not available."""

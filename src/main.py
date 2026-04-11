@@ -29,6 +29,7 @@ from src.db.postgres import dispose_engine
 from src.db.redis import close_redis
 from src.lib.logger import configure_logging, get_logger
 from src.lib.utils import AppError
+from src.triggers.cron import start_scheduler, stop_scheduler
 
 logger = get_logger(__name__)
 
@@ -47,8 +48,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         host=settings.host,
         port=settings.port,
     )
+
+    # Start cron scheduler (skip in testing to avoid DB access)
+    if not settings.is_testing:
+        try:
+            await start_scheduler()
+        except Exception:
+            logger.warning("cron_scheduler_startup_failed", exc_info=True)
+
     yield
+
     logger.info("app_shutdown")
+    await stop_scheduler()
     await dispose_engine()
     await close_redis()
 

@@ -93,22 +93,13 @@ def _parse_steps(raw_steps: list[Any]) -> list[StepDefinition]:
             step = StepDefinition(**raw_step)
             steps.append(step)
         except ValidationError as exc:
-            step_type = (
-                raw_step.get("type", "")
-                if isinstance(raw_step, dict)
-                else ""
-            )
+            step_type = raw_step.get("type", "") if isinstance(raw_step, dict) else ""
             if step_type and step_type not in VALID_STEP_TYPES:
                 raise AppError(
                     code="UNKNOWN_STEP_TYPE",
-                    message=(
-                        f"Unknown step type '{step_type}' "
-                        f"on step at index {i}."
-                    ),
+                    message=(f"Unknown step type '{step_type}' on step at index {i}."),
                     status_code=400,
-                    details=[
-                        {"step_index": i, "step_type": step_type}
-                    ],
+                    details=[{"step_index": i, "step_type": step_type}],
                 ) from exc
             raise AppError(
                 code="VALIDATION_ERROR",
@@ -144,14 +135,9 @@ def _validate_step_types(steps: list[StepDefinition]) -> None:
         if step.type.value not in VALID_STEP_TYPES:
             raise AppError(
                 code="UNKNOWN_STEP_TYPE",
-                message=(
-                    f"Unknown step type '{step.type}' "
-                    f"on step '{step.id}'."
-                ),
+                message=(f"Unknown step type '{step.type}' on step '{step.id}'."),
                 status_code=400,
-                details=[
-                    {"step_id": step.id, "step_type": step.type}
-                ],
+                details=[{"step_id": step.id, "step_type": step.type}],
             )
 
 
@@ -164,13 +150,10 @@ def _validate_dependencies(steps: list[StepDefinition]) -> None:
                 raise AppError(
                     code="INVALID_DEPENDENCY",
                     message=(
-                        f"Step '{step.id}' depends on '{dep}', "
-                        f"which does not exist."
+                        f"Step '{step.id}' depends on '{dep}', which does not exist."
                     ),
                     status_code=400,
-                    details=[
-                        {"step_id": step.id, "dependency": dep}
-                    ],
+                    details=[{"step_id": step.id, "dependency": dep}],
                 )
 
 
@@ -212,9 +195,7 @@ def _has_jinja2(value: str) -> bool:
     return "{{" in value or "{%" in value
 
 
-def _parse_expression(
-    step_id: str, key: str, value: str, env: Any
-) -> None:
+def _parse_expression(step_id: str, key: str, value: str, env: Any) -> None:
     """Parse a single Jinja2 expression, raising on error."""
     try:
         env.parse(value)

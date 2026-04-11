@@ -10,9 +10,13 @@ from tests.e2e.helpers.server import (
 )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def running_server():
-    """Start the uvicorn server for E2E tests and stop it after."""
+    """Start the uvicorn server for E2E tests and stop it after.
+
+    Session-scoped so all E2E test modules share a single server
+    instance, avoiding port conflicts on port 8099.
+    """
     proc = start_server()
     healthy = wait_for_healthy()
     if not healthy:

@@ -43,8 +43,10 @@ class TestWorkerSettings:
         """WorkerSettings registers the execute_step function."""
         from src.queue.worker import WorkerSettings
 
-        func_names = [f.name if hasattr(f, "name") else f.__name__
-                      for f in WorkerSettings.functions]
+        func_names = [
+            f.name if hasattr(f, "name") else f.__name__
+            for f in WorkerSettings.functions
+        ]
         assert "execute_step" in func_names
 
     def test_worker_has_startup_handler(self):

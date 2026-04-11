@@ -67,9 +67,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         try:
             async with async_session_factory() as session:
-                tenant_ctx = await validate_api_key(
-                    api_key=api_key, session=session
-                )
+                tenant_ctx = await validate_api_key(api_key=api_key, session=session)
             request.state.tenant = tenant_ctx
         except AppError as exc:
             return JSONResponse(

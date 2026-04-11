@@ -141,9 +141,7 @@ class TestManualExecuteAndQueryE2E:
         assert "steps" in body
         assert body["execution"]["id"] == exec_id
 
-    def test_manual_execute_no_auth_returns_401(
-        self, running_server, manual_workflow
-    ):
+    def test_manual_execute_no_auth_returns_401(self, running_server, manual_workflow):
         """Manual execution without API key returns 401."""
         wf_id = manual_workflow["id"]
         resp = httpx.post(

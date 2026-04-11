@@ -90,9 +90,7 @@ class TestRateLimitHeaders:
 class TestRateLimitEnforcement:
     """Tests for rate limit enforcement with 429 responses."""
 
-    async def test_exceeding_limit_returns_429(
-        self, patched_app, test_session_factory
-    ):
+    async def test_exceeding_limit_returns_429(self, patched_app, test_session_factory):
         """Exceeding rate limit returns 429 Too Many Requests."""
         async with AsyncClient(
             transport=ASGITransport(app=patched_app), base_url="http://test"
@@ -110,9 +108,7 @@ class TestRateLimitEnforcement:
         from src.db.models import Tenant
 
         async with test_session_factory() as session:
-            await session.execute(
-                delete(Tenant).where(Tenant.name == "Rate Test")
-            )
+            await session.execute(delete(Tenant).where(Tenant.name == "Rate Test"))
             await session.commit()
 
     async def test_429_response_has_error_format(
@@ -136,9 +132,7 @@ class TestRateLimitEnforcement:
         from src.db.models import Tenant
 
         async with test_session_factory() as session:
-            await session.execute(
-                delete(Tenant).where(Tenant.name == "Rate Fmt")
-            )
+            await session.execute(delete(Tenant).where(Tenant.name == "Rate Fmt"))
             await session.commit()
 
     async def test_429_includes_rate_limit_headers(
@@ -161,9 +155,7 @@ class TestRateLimitEnforcement:
         from src.db.models import Tenant
 
         async with test_session_factory() as session:
-            await session.execute(
-                delete(Tenant).where(Tenant.name == "Rate Hdr")
-            )
+            await session.execute(delete(Tenant).where(Tenant.name == "Rate Hdr"))
             await session.commit()
 
 
@@ -194,9 +186,7 @@ class TestRateLimitPerRoute:
         from src.db.models import Tenant
 
         async with test_session_factory() as session:
-            await session.execute(
-                delete(Tenant).where(Tenant.name == "Limit Test")
-            )
+            await session.execute(delete(Tenant).where(Tenant.name == "Limit Test"))
             await session.commit()
 
     async def test_default_route_has_100_per_min_limit(self, patched_app):

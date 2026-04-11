@@ -32,7 +32,7 @@ class TestRegisterTenant:
         result = await register_tenant(name="Test Corp", session=db_session)
         key = result.api_key
         assert key.startswith("wae_live_")
-        hex_part = key[len("wae_live_"):]
+        hex_part = key[len("wae_live_") :]
         assert len(hex_part) == 32
         # Verify it's valid hex
         int(hex_part, 16)

@@ -198,9 +198,7 @@ class TestTenantMeEndpoint:
             from src.db.models import Tenant
 
             async with test_session_factory() as session:
-                await session.execute(
-                    delete(Tenant).where(Tenant.id == result.id)
-                )
+                await session.execute(delete(Tenant).where(Tenant.id == result.id))
                 await session.commit()
 
     async def test_me_without_api_key_returns_401(self, patched_app):
@@ -224,9 +222,7 @@ class TestTenantMeEndpoint:
 
         assert resp.status_code == 401
 
-    async def test_me_does_not_expose_api_key(
-        self, patched_app, test_session_factory
-    ):
+    async def test_me_does_not_expose_api_key(self, patched_app, test_session_factory):
         """GET /api/tenants/me response does NOT include the API key."""
         from src.tenants.service import register_tenant
 
@@ -252,7 +248,5 @@ class TestTenantMeEndpoint:
             from src.db.models import Tenant
 
             async with test_session_factory() as session:
-                await session.execute(
-                    delete(Tenant).where(Tenant.id == result.id)
-                )
+                await session.execute(delete(Tenant).where(Tenant.id == result.id))
                 await session.commit()

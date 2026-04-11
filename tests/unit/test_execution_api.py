@@ -156,12 +156,8 @@ async def workflow_with_execution(test_session_factory, tenant_api_key):
         await session.execute(
             delete(StepExecution).where(StepExecution.id == step_exec.id)
         )
-        await session.execute(
-            delete(Execution).where(Execution.id == execution.id)
-        )
-        await session.execute(
-            delete(Workflow).where(Workflow.id == workflow.id)
-        )
+        await session.execute(delete(Execution).where(Execution.id == execution.id))
+        await session.execute(delete(Workflow).where(Workflow.id == workflow.id))
         await session.commit()
 
 
@@ -500,9 +496,7 @@ class TestGetExecution:
         assert body["execution"]["id"] == exec_id
         assert len(body["steps"]) >= 1
 
-    async def test_get_execution_not_found(
-        self, patched_app, tenant_api_key
-    ):
+    async def test_get_execution_not_found(self, patched_app, tenant_api_key):
         """GET /api/executions/:id for nonexistent execution returns 404."""
         api_key, _ = tenant_api_key
 

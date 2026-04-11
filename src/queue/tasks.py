@@ -140,9 +140,7 @@ async def execute_step(
         executor = executor_class()
 
         try:
-            output = await executor.execute(
-                step_exec.input_data or {}, step_input
-            )
+            output = await executor.execute(step_exec.input_data or {}, step_input)
 
             # Success: transition and merge output
             await transition_step(session, se_uuid, "completed")
@@ -163,9 +161,7 @@ async def execute_step(
             step_exec.attempt = (step_exec.attempt or 1) + 1
             session.add(step_exec)
 
-            await transition_step(
-                session, se_uuid, "failed", error=error_msg
-            )
+            await transition_step(session, se_uuid, "failed", error=error_msg)
             await session.commit()
 
             logger.warning(

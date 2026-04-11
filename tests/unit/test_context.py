@@ -43,9 +43,7 @@ class TestMergeStepOutput:
         db_session.add(execution)
         await db_session.flush()
 
-        await merge_step_output(
-            db_session, execution.id, "s1", {"result": "hello"}
-        )
+        await merge_step_output(db_session, execution.id, "s1", {"result": "hello"})
         await db_session.refresh(execution)
 
         assert "steps" in execution.context
@@ -86,9 +84,7 @@ class TestMergeStepOutput:
         db_session.add(execution)
         await db_session.flush()
 
-        await merge_step_output(
-            db_session, execution.id, "s2", {"b": 2}
-        )
+        await merge_step_output(db_session, execution.id, "s2", {"b": 2})
         await db_session.refresh(execution)
 
         assert execution.context["steps"]["s1"]["output"] == {"a": 1}
@@ -125,9 +121,7 @@ class TestMergeStepOutput:
         db_session.add(execution)
         await db_session.flush()
 
-        await merge_step_output(
-            db_session, execution.id, "s1", {"val": 42}
-        )
+        await merge_step_output(db_session, execution.id, "s1", {"val": 42})
         await db_session.refresh(execution)
 
         assert execution.context["trigger"]["payload"]["name"] == "test"

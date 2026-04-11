@@ -63,6 +63,4 @@ def downgrade() -> None:
     op.execute("ALTER TABLE tenants DISABLE ROW LEVEL SECURITY")
 
     # Revoke app_user grants (role itself is kept for safety)
-    op.execute(
-        "REVOKE ALL ON ALL TABLES IN SCHEMA public FROM app_user"
-    )
+    op.execute("REVOKE ALL ON ALL TABLES IN SCHEMA public FROM app_user")

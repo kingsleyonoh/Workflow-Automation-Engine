@@ -106,9 +106,7 @@ class TestAuthMiddlewareMissingKey:
         async with AsyncClient(
             transport=ASGITransport(app=patched_app), base_url="http://test"
         ) as client:
-            resp = await client.get(
-                "/api/workflows", headers={"X-API-Key": ""}
-            )
+            resp = await client.get("/api/workflows", headers={"X-API-Key": ""})
         assert resp.status_code == 401
 
 
@@ -122,9 +120,7 @@ class TestAuthMiddlewareInvalidKey:
         ) as client:
             resp = await client.get(
                 "/api/workflows",
-                headers={
-                    "X-API-Key": "wae_live_deadbeefdeadbeefdeadbeefdeadbeef"
-                },
+                headers={"X-API-Key": "wae_live_deadbeefdeadbeefdeadbeefdeadbeef"},
             )
         assert resp.status_code == 401
         body = resp.json()
@@ -134,17 +130,13 @@ class TestAuthMiddlewareInvalidKey:
 class TestAuthMiddlewareValidKey:
     """Tests for requests with valid API keys."""
 
-    async def test_valid_key_passes_through(
-        self, patched_app, test_session_factory
-    ):
+    async def test_valid_key_passes_through(self, patched_app, test_session_factory):
         """Valid API key passes auth and reaches the handler."""
         from src.tenants.service import register_tenant
 
         # Use a real committed session so the middleware can see the data
         async with test_session_factory() as session:
-            result = await register_tenant(
-                name="Auth Test Corp", session=session
-            )
+            result = await register_tenant(name="Auth Test Corp", session=session)
             await session.commit()
 
         try:
@@ -165,9 +157,7 @@ class TestAuthMiddlewareValidKey:
             from src.db.models import Tenant
 
             async with test_session_factory() as session:
-                await session.execute(
-                    delete(Tenant).where(Tenant.id == result.id)
-                )
+                await session.execute(delete(Tenant).where(Tenant.id == result.id))
                 await session.commit()
 
 

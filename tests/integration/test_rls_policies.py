@@ -50,8 +50,7 @@ async def _create_execution(
     """Helper: insert an execution and return its id."""
     exec_id = uuid.uuid4()
     await conn.execute(
-        "INSERT INTO executions (id, tenant_id, workflow_id) "
-        "VALUES ($1, $2, $3)",
+        "INSERT INTO executions (id, tenant_id, workflow_id) VALUES ($1, $2, $3)",
         exec_id,
         tenant_id,
         workflow_id,
@@ -213,14 +212,14 @@ class TestRLSTenantIsolation:
                 await conn.execute(
                     "ALTER ROLE app_user WITH PASSWORD 'app_user_pass' LOGIN"
                 )
-            app_url = "postgresql://app_user:app_user_pass@localhost:5435/workflows_test"
+            app_url = (
+                "postgresql://app_user:app_user_pass@localhost:5435/workflows_test"
+            )
             app_conn = await asyncpg.connect(app_url)
 
         try:
             # Set tenant context to Tenant A
-            await app_conn.execute(
-                f"SET app.current_tenant_id = '{tenant_a}'"
-            )
+            await app_conn.execute(f"SET app.current_tenant_id = '{tenant_a}'")
             rows = await app_conn.fetch("SELECT id FROM tenants")
             tenant_ids = {r["id"] for r in rows}
             assert tenant_a in tenant_ids
@@ -251,13 +250,13 @@ class TestRLSTenantIsolation:
                 await conn.execute(
                     "ALTER ROLE app_user WITH PASSWORD 'app_user_pass' LOGIN"
                 )
-            app_url = "postgresql://app_user:app_user_pass@localhost:5435/workflows_test"
+            app_url = (
+                "postgresql://app_user:app_user_pass@localhost:5435/workflows_test"
+            )
             app_conn = await asyncpg.connect(app_url)
 
         try:
-            await app_conn.execute(
-                f"SET app.current_tenant_id = '{tenant_a}'"
-            )
+            await app_conn.execute(f"SET app.current_tenant_id = '{tenant_a}'")
             rows = await app_conn.fetch("SELECT id FROM workflows")
             workflow_ids = {r["id"] for r in rows}
             assert wf_a in workflow_ids
@@ -290,13 +289,13 @@ class TestRLSTenantIsolation:
                 await conn.execute(
                     "ALTER ROLE app_user WITH PASSWORD 'app_user_pass' LOGIN"
                 )
-            app_url = "postgresql://app_user:app_user_pass@localhost:5435/workflows_test"
+            app_url = (
+                "postgresql://app_user:app_user_pass@localhost:5435/workflows_test"
+            )
             app_conn = await asyncpg.connect(app_url)
 
         try:
-            await app_conn.execute(
-                f"SET app.current_tenant_id = '{tenant_a}'"
-            )
+            await app_conn.execute(f"SET app.current_tenant_id = '{tenant_a}'")
             rows = await app_conn.fetch("SELECT id FROM executions")
             exec_ids = {r["id"] for r in rows}
             assert exec_a in exec_ids

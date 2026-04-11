@@ -31,9 +31,7 @@ def _two_step_workflow() -> list[dict]:
         {
             "id": "transform_2",
             "type": "transform",
-            "config": {
-                "expression": "Result: {{ steps.transform_1.output.result }}"
-            },
+            "config": {"expression": "Result: {{ steps.transform_1.output.result }}"},
             "depends_on": ["transform_1"],
         },
     ]
@@ -114,9 +112,7 @@ class TestStartExecution:
         )
         trigger_data = {"payload": {"name": "alice"}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
         # After synchronous execution the simple workflow completes
         assert execution.status in ("running", "completed")
@@ -132,13 +128,9 @@ class TestStartExecution:
         )
         trigger_data = {"payload": {"name": "bob"}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
-        stmt = select(StepExecution).where(
-            StepExecution.execution_id == execution.id
-        )
+        stmt = select(StepExecution).where(StepExecution.execution_id == execution.id)
         result = await db_session.execute(stmt)
         step_execs = list(result.scalars().all())
 
@@ -155,9 +147,7 @@ class TestStartExecution:
         )
         trigger_data = {"payload": {"name": "charlie"}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
         assert "trigger" in execution.context
         assert execution.context["trigger"]["payload"]["name"] == "charlie"
@@ -171,9 +161,7 @@ class TestStartExecution:
         )
         trigger_data = {"payload": {"name": "diana"}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
         await db_session.refresh(execution)
         assert execution.status == "completed"
@@ -187,9 +175,7 @@ class TestStartExecution:
         )
         trigger_data = {"payload": {"name": "eve"}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
         await db_session.refresh(execution)
         assert execution.status == "completed"
@@ -209,13 +195,9 @@ class TestStartExecution:
         )
         trigger_data = {"payload": {"name": "frank"}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
-        stmt = select(StepExecution).where(
-            StepExecution.execution_id == execution.id
-        )
+        stmt = select(StepExecution).where(StepExecution.execution_id == execution.id)
         result = await db_session.execute(stmt)
         step_execs = list(result.scalars().all())
 
@@ -235,16 +217,12 @@ class TestConditionStep:
         )
         trigger_data = {"payload": {"go": "true"}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
         await db_session.refresh(execution)
         assert execution.status == "completed"
 
-        stmt = select(StepExecution).where(
-            StepExecution.execution_id == execution.id
-        )
+        stmt = select(StepExecution).where(StepExecution.execution_id == execution.id)
         result = await db_session.execute(stmt)
         step_execs = {se.step_id: se.status for se in result.scalars().all()}
 
@@ -261,16 +239,12 @@ class TestConditionStep:
         )
         trigger_data = {"payload": {"go": ""}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
         await db_session.refresh(execution)
         assert execution.status == "completed"
 
-        stmt = select(StepExecution).where(
-            StepExecution.execution_id == execution.id
-        )
+        stmt = select(StepExecution).where(StepExecution.execution_id == execution.id)
         result = await db_session.execute(stmt)
         step_execs = {se.step_id: se.status for se in result.scalars().all()}
 
@@ -291,9 +265,7 @@ class TestStepFailure:
         )
         trigger_data = {"payload": {}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
         await db_session.refresh(execution)
         assert execution.status == "failed"
@@ -307,9 +279,7 @@ class TestStepFailure:
         )
         trigger_data = {"payload": {}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
         stmt = select(StepExecution).where(
             StepExecution.execution_id == execution.id,
@@ -334,9 +304,7 @@ class TestTenantIsolation:
         )
         trigger_data = {"payload": {"name": "test"}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
         assert execution.tenant_id == tenant.id
 
@@ -349,13 +317,9 @@ class TestTenantIsolation:
         )
         trigger_data = {"payload": {"name": "test"}}
 
-        execution = await start_execution(
-            db_session, workflow, trigger_data, tenant.id
-        )
+        execution = await start_execution(db_session, workflow, trigger_data, tenant.id)
 
-        stmt = select(StepExecution).where(
-            StepExecution.execution_id == execution.id
-        )
+        stmt = select(StepExecution).where(StepExecution.execution_id == execution.id)
         result = await db_session.execute(stmt)
         for se in result.scalars().all():
             assert se.tenant_id == tenant.id

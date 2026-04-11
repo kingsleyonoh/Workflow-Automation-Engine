@@ -33,6 +33,10 @@ ROUTE_LIMITS: list[tuple[str, str, int]] = [
     ("POST", "/webhooks/", 100),
 ]
 
+# Note: SSE stream endpoint rate limit is 30/min (matched by GET /api/executions/),
+# Cancel endpoint rate limit is 20/min (matched by POST /api/executions/),
+# Logs endpoint rate limit is 100/min (matched by GET /api/executions/).
+
 DEFAULT_LIMIT = 100
 WINDOW_SECONDS = 60
 

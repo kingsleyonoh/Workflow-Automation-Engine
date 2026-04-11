@@ -11,7 +11,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from src.db.models import Execution, StepExecution
+from src.db.models import Execution, ExecutionLog, StepExecution
 from src.lib.utils import AppError
 
 
@@ -67,6 +67,29 @@ class ExecutionDetailResponse(BaseModel):
     steps: list[StepExecutionResponse]
 
 
+class ExecutionLogResponse(BaseModel):
+    """Response model for a single execution log entry."""
+
+    id: uuid.UUID
+    step_id: str | None
+    level: str
+    message: str
+    data: dict[str, Any]
+    created_at: datetime
+
+
+class ExecutionLogsListResponse(BaseModel):
+    """Response model for execution logs list."""
+
+    logs: list[ExecutionLogResponse]
+
+
+class CancelExecutionResponse(BaseModel):
+    """Response model for cancel execution."""
+
+    cancelled: bool
+
+
 def execution_to_response(ex: Execution) -> ExecutionResponse:
     """Convert an Execution ORM model to a response model."""
     return ExecutionResponse(
@@ -98,6 +121,18 @@ def step_execution_to_response(se: StepExecution) -> StepExecutionResponse:
         completed_at=se.completed_at,
         duration_ms=se.duration_ms,
         created_at=se.created_at,
+    )
+
+
+def execution_log_to_response(log: ExecutionLog) -> ExecutionLogResponse:
+    """Convert an ExecutionLog ORM model to a response model."""
+    return ExecutionLogResponse(
+        id=log.id,
+        step_id=log.step_id,
+        level=log.level,
+        message=log.message,
+        data=log.data or {},
+        created_at=log.created_at,
     )
 
 

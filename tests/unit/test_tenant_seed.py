@@ -5,7 +5,6 @@ respect for configuration settings, and correct behavior.
 """
 
 
-
 class TestSeedDefaultTenant:
     """Tests for seed_default_tenant function."""
 

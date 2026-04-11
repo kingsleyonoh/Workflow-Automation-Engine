@@ -64,10 +64,7 @@ def detect_cycles(graph: dict[str, list[str]]) -> None:
             if cycle:
                 raise AppError(
                     code="CYCLE_DETECTED",
-                    message=(
-                        f"Cycle detected in workflow: "
-                        f"{' -> '.join(cycle)}"
-                    ),
+                    message=(f"Cycle detected in workflow: {' -> '.join(cycle)}"),
                     status_code=400,
                     details=[{"cycle": cycle}],
                 )
@@ -130,7 +127,5 @@ def validate_max_depth(graph: dict[str, list[str]]) -> None:
                 f"exceeding the maximum of {MAX_DEPTH}."
             ),
             status_code=400,
-            details=[
-                {"max_depth": MAX_DEPTH, "actual_depth": max_found + 1}
-            ],
+            details=[{"max_depth": MAX_DEPTH, "actual_depth": max_found + 1}],
         )

@@ -65,10 +65,7 @@ class DelayExecutor(BaseStepExecutor):
         if seconds > MAX_DELAY_SECONDS:
             raise AppError(
                 code="STEP_CONFIG_ERROR",
-                message=(
-                    f"Delay step 'seconds' must not exceed "
-                    f"{MAX_DELAY_SECONDS}."
-                ),
+                message=(f"Delay step 'seconds' must not exceed {MAX_DELAY_SECONDS}."),
                 status_code=400,
             )
 

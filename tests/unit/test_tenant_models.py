@@ -90,9 +90,7 @@ class TestTenantResponse:
         from src.tenants.models import TenantResponse
 
         with pytest.raises(ValidationError):
-            TenantResponse(
-                name="Test", is_active=True, created_at=datetime.now(UTC)
-            )  # type: ignore[call-arg]
+            TenantResponse(name="Test", is_active=True, created_at=datetime.now(UTC))  # type: ignore[call-arg]
 
     def test_name_required(self):
         """TenantResponse rejects missing name."""
@@ -108,18 +106,14 @@ class TestTenantResponse:
         from src.tenants.models import TenantResponse
 
         with pytest.raises(ValidationError):
-            TenantResponse(
-                id=uuid.uuid4(), name="Test", created_at=datetime.now(UTC)
-            )  # type: ignore[call-arg]
+            TenantResponse(id=uuid.uuid4(), name="Test", created_at=datetime.now(UTC))  # type: ignore[call-arg]
 
     def test_created_at_required(self):
         """TenantResponse rejects missing created_at."""
         from src.tenants.models import TenantResponse
 
         with pytest.raises(ValidationError):
-            TenantResponse(
-                id=uuid.uuid4(), name="Test", is_active=True
-            )  # type: ignore[call-arg]
+            TenantResponse(id=uuid.uuid4(), name="Test", is_active=True)  # type: ignore[call-arg]
 
     def test_serialization_to_dict(self):
         """TenantResponse serializes to dict with expected keys."""
@@ -156,9 +150,7 @@ class TestTenantWithKey:
         from src.tenants.models import TenantWithKey
 
         with pytest.raises(ValidationError):
-            TenantWithKey(
-                id=uuid.uuid4(), name="Test"
-            )  # type: ignore[call-arg]
+            TenantWithKey(id=uuid.uuid4(), name="Test")  # type: ignore[call-arg]
 
     def test_serialization_includes_api_key(self):
         """TenantWithKey serializes with api_key in output."""

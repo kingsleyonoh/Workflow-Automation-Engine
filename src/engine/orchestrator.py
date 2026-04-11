@@ -16,7 +16,6 @@ from src.engine.context import get_step_input, merge_step_output
 from src.engine.models import StepType
 from src.engine.parser import parse_workflow_definition
 from src.engine.state import transition_execution, transition_step
-from src.lib.expressions import evaluate_expression
 from src.lib.logger import get_logger
 from src.lib.utils import AppError
 
@@ -219,6 +218,9 @@ async def _execute_step_with_retry(
 async def _run_step(step_def: Any, context: dict[str, Any]) -> dict[str, Any]:
     """Dispatch a step to the appropriate executor.
 
+    Uses the step registry from src.queue.tasks to map StepType
+    to executor classes. Falls back to empty output for unknown types.
+
     Args:
         step_def: Step definition from the parser.
         context: Step input context.
@@ -229,39 +231,20 @@ async def _run_step(step_def: Any, context: dict[str, Any]) -> dict[str, Any]:
     Raises:
         AppError: On step execution failure.
     """
-    from src.steps.transform import TransformExecutor
+    from src.queue.tasks import STEP_REGISTRY
 
-    if step_def.type == StepType.TRANSFORM:
-        executor = TransformExecutor()
+    executor_class = STEP_REGISTRY.get(step_def.type)
+    if executor_class is not None:
+        executor = executor_class()
         return await executor.execute(step_def.config, context)
 
-    if step_def.type == StepType.CONDITION:
-        return await _execute_condition(step_def, context)
-
     # For unsupported step types, return empty output
-    # (http, delay, sub_workflow will be added in later phases)
     logger.warning(
         "unsupported_step_type",
         step_type=step_def.type.value,
         step_id=step_def.id,
     )
     return {}
-
-
-async def _execute_condition(step_def: Any, context: dict[str, Any]) -> dict[str, Any]:
-    """Execute a condition step by evaluating its expression.
-
-    Args:
-        step_def: Condition step definition.
-        context: Step input context.
-
-    Returns:
-        Dict with ``result`` key (truthy/falsy string evaluation).
-    """
-    expression = step_def.config.get("expression", "")
-    result = evaluate_expression(expression, context)
-
-    return {"result": result, "evaluated": bool(result)}
 
 
 def _resolve_condition_branches(
@@ -282,15 +265,21 @@ def _resolve_condition_branches(
         Set of step IDs that should be skipped.
     """
     output = step_exec.output_data or {}
-    result_str = output.get("result", "")
 
-    # Determine truthiness: non-empty, non-"false", non-"0" strings
-    is_truthy = bool(result_str) and result_str.lower() not in (
-        "false",
-        "0",
-        "none",
-        "",
-    )
+    # ConditionExecutor returns { result: bool, branch: "true"|"false" }
+    result_value = output.get("result", False)
+
+    # Handle both bool (from ConditionExecutor) and string (legacy)
+    if isinstance(result_value, bool):
+        is_truthy = result_value
+    else:
+        result_str = str(result_value)
+        is_truthy = bool(result_str) and result_str.lower() not in (
+            "false",
+            "0",
+            "none",
+            "",
+        )
 
     true_branch = step_def.config.get("true_branch", [])
     false_branch = step_def.config.get("false_branch", [])

@@ -42,6 +42,14 @@ def patched_app(test_session_factory, redis_client):
             test_session_factory,
         ),
         patch(
+            "src.api.webhooks.async_session_factory",
+            test_session_factory,
+        ),
+        patch(
+            "src.api.executions.async_session_factory",
+            test_session_factory,
+        ),
+        patch(
             "src.api.middleware.rate_limit.get_redis",
             return_value=redis_client,
         ),

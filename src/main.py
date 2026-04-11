@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from src.api.executions import router as executions_router
 from src.api.health import router as health_router
 from src.api.middleware.auth import AuthMiddleware
 from src.api.middleware.errors import (
@@ -21,6 +22,7 @@ from src.api.middleware.errors import (
 )
 from src.api.middleware.rate_limit import RateLimitMiddleware
 from src.api.tenants import router as tenants_router
+from src.api.webhooks import router as webhooks_router
 from src.api.workflows import router as workflows_router
 from src.config import settings
 from src.db.postgres import dispose_engine
@@ -82,3 +84,5 @@ app.add_exception_handler(Exception, unhandled_exception_handler)  # type: ignor
 app.include_router(health_router)
 app.include_router(tenants_router)
 app.include_router(workflows_router)
+app.include_router(executions_router)
+app.include_router(webhooks_router)

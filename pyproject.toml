@@ -45,6 +45,7 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 markers = [
     "integration: tests requiring local PostgreSQL and Redis services",
+    "e2e: end-to-end tests hitting a running server over HTTP",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",

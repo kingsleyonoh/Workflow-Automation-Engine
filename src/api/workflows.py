@@ -4,6 +4,7 @@ POST /api/workflows — create workflow
 GET /api/workflows — list workflows (tenant-scoped, paginated)
 GET /api/workflows/:id — get single workflow
 PUT /api/workflows/:id — update workflow
+DELETE /api/workflows/:id — delete workflow
 """
 
 import uuid
@@ -52,17 +53,15 @@ async def create_workflow(
     """
     tenant = request.state.tenant
 
-    parse_workflow_definition({
-        "name": body.name,
-        "trigger_type": body.trigger_type,
-        "steps": body.steps,
-    })
-
-    webhook_path = (
-        generate_webhook_path()
-        if body.trigger_type == "webhook"
-        else None
+    parse_workflow_definition(
+        {
+            "name": body.name,
+            "trigger_type": body.trigger_type,
+            "steps": body.steps,
+        }
     )
+
+    webhook_path = generate_webhook_path() if body.trigger_type == "webhook" else None
 
     workflow = Workflow(
         tenant_id=tenant.id,
@@ -180,9 +179,7 @@ async def get_workflow(
     tenant = request.state.tenant
 
     async with async_session_factory() as session:
-        workflow = await _get_tenant_workflow(
-            session, workflow_id, tenant.id
-        )
+        workflow = await _get_tenant_workflow(session, workflow_id, tenant.id)
 
     return workflow_to_response(workflow)
 
@@ -212,9 +209,7 @@ async def update_workflow(
     tenant = request.state.tenant
 
     async with async_session_factory() as session:
-        workflow = await _get_tenant_workflow(
-            session, workflow_id, tenant.id
-        )
+        workflow = await _get_tenant_workflow(session, workflow_id, tenant.id)
 
         if body.name is not None:
             workflow.name = body.name
@@ -229,21 +224,18 @@ async def update_workflow(
             workflow.is_active = body.is_active
 
         if body.steps is not None:
-            parse_workflow_definition({
-                "name": workflow.name,
-                "trigger_type": (
-                    body.trigger_type or workflow.trigger_type
-                ),
-                "steps": body.steps,
-            })
+            parse_workflow_definition(
+                {
+                    "name": workflow.name,
+                    "trigger_type": (body.trigger_type or workflow.trigger_type),
+                    "steps": body.steps,
+                }
+            )
             workflow.steps = body.steps
 
         if body.trigger_type is not None:
             workflow.trigger_type = body.trigger_type
-            if (
-                body.trigger_type == "webhook"
-                and not workflow.webhook_path
-            ):
+            if body.trigger_type == "webhook" and not workflow.webhook_path:
                 workflow.webhook_path = generate_webhook_path()
             elif body.trigger_type != "webhook":
                 workflow.webhook_path = None
@@ -259,6 +251,42 @@ async def update_workflow(
     )
 
     return workflow_to_response(workflow)
+
+
+@router.delete("/{workflow_id}")
+async def delete_workflow(
+    workflow_id: uuid.UUID,
+    request: Request,
+) -> dict:
+    """Delete a workflow by ID, scoped to authenticated tenant.
+
+    CASCADE deletes related executions, step_executions, etc.
+    as configured via FK ON DELETE CASCADE in the database schema.
+
+    Args:
+        workflow_id: The workflow UUID.
+        request: HTTP request with tenant context.
+
+    Returns:
+        ``{"deleted": True}`` on success.
+
+    Raises:
+        AppError: NOT_FOUND (404) if not found or wrong tenant.
+    """
+    tenant = request.state.tenant
+
+    async with async_session_factory() as session:
+        workflow = await _get_tenant_workflow(session, workflow_id, tenant.id)
+        await session.delete(workflow)
+        await session.commit()
+
+    logger.info(
+        "workflow_deleted",
+        workflow_id=str(workflow_id),
+        tenant_id=str(tenant.id),
+    )
+
+    return {"deleted": True}
 
 
 async def _get_tenant_workflow(

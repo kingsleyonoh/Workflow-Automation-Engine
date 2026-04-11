@@ -871,3 +871,120 @@ class TestUpdateWorkflow:
             )
 
         assert resp.status_code == 401
+
+
+class TestDeleteWorkflow:
+    """Tests for DELETE /api/workflows/:id."""
+
+    async def test_delete_existing_workflow(self, patched_app, tenant_api_key):
+        """DELETE /api/workflows/:id returns {"deleted": true} for owned workflow."""
+        api_key, tenant_id = tenant_api_key
+
+        async with AsyncClient(
+            transport=ASGITransport(app=patched_app), base_url="http://test"
+        ) as client:
+            create_resp = await client.post(
+                "/api/workflows",
+                json={
+                    "name": "Delete Me",
+                    "trigger_type": "manual",
+                    "steps": _valid_steps(),
+                },
+                headers={"X-API-Key": api_key},
+            )
+            wf_id = create_resp.json()["id"]
+
+            resp = await client.delete(
+                f"/api/workflows/{wf_id}",
+                headers={"X-API-Key": api_key},
+            )
+
+        assert resp.status_code == 200
+        assert resp.json() == {"deleted": True}
+
+    async def test_delete_removes_workflow_from_list(self, patched_app, tenant_api_key):
+        """Deleted workflow no longer appears in GET /api/workflows."""
+        api_key, tenant_id = tenant_api_key
+
+        async with AsyncClient(
+            transport=ASGITransport(app=patched_app), base_url="http://test"
+        ) as client:
+            create_resp = await client.post(
+                "/api/workflows",
+                json={
+                    "name": "Will Be Gone",
+                    "trigger_type": "manual",
+                    "steps": _valid_steps(),
+                },
+                headers={"X-API-Key": api_key},
+            )
+            wf_id = create_resp.json()["id"]
+
+            await client.delete(
+                f"/api/workflows/{wf_id}",
+                headers={"X-API-Key": api_key},
+            )
+
+            # Try to get the deleted workflow
+            get_resp = await client.get(
+                f"/api/workflows/{wf_id}",
+                headers={"X-API-Key": api_key},
+            )
+
+        assert get_resp.status_code == 404
+
+    async def test_delete_not_found_returns_404(self, patched_app, tenant_api_key):
+        """DELETE /api/workflows/:id with non-existent ID returns 404."""
+        api_key, tenant_id = tenant_api_key
+        fake_id = "00000000-0000-0000-0000-000000000000"
+
+        async with AsyncClient(
+            transport=ASGITransport(app=patched_app), base_url="http://test"
+        ) as client:
+            resp = await client.delete(
+                f"/api/workflows/{fake_id}",
+                headers={"X-API-Key": api_key},
+            )
+
+        assert resp.status_code == 404
+
+    async def test_delete_other_tenant_returns_404(
+        self, patched_app, tenant_api_key, second_tenant_api_key
+    ):
+        """DELETE /api/workflows/:id for another tenant's workflow returns 404."""
+        api_key, tenant_id = tenant_api_key
+        other_key, other_id = second_tenant_api_key
+
+        async with AsyncClient(
+            transport=ASGITransport(app=patched_app), base_url="http://test"
+        ) as client:
+            # Create as tenant 2
+            create_resp = await client.post(
+                "/api/workflows",
+                json={
+                    "name": "Other WF to Delete",
+                    "trigger_type": "manual",
+                    "steps": _valid_steps(),
+                },
+                headers={"X-API-Key": other_key},
+            )
+            wf_id = create_resp.json()["id"]
+
+            # Try to delete as tenant 1
+            resp = await client.delete(
+                f"/api/workflows/{wf_id}",
+                headers={"X-API-Key": api_key},
+            )
+
+        assert resp.status_code == 404
+
+    async def test_delete_no_auth_returns_401(self, patched_app):
+        """DELETE /api/workflows/:id without API key returns 401."""
+        async with AsyncClient(
+            transport=ASGITransport(app=patched_app), base_url="http://test"
+        ) as client:
+            resp = await client.delete(
+                "/api/workflows/00000000-0000-0000-0000-000000000000"
+            )
+
+        assert resp.status_code == 401

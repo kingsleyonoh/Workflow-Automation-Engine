@@ -90,6 +90,12 @@ class CancelExecutionResponse(BaseModel):
     cancelled: bool
 
 
+class ReplayRequest(BaseModel):
+    """Request body for execution replay."""
+
+    override_data: dict[str, Any] = Field(default_factory=dict)
+
+
 def execution_to_response(ex: Execution) -> ExecutionResponse:
     """Convert an Execution ORM model to a response model."""
     return ExecutionResponse(

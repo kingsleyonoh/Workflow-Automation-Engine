@@ -19,6 +19,7 @@ from src.steps.base import BaseStepExecutor
 from src.steps.condition import ConditionExecutor
 from src.steps.delay import DelayExecutor
 from src.steps.http import HttpExecutor
+from src.steps.sub_workflow import SubWorkflowExecutor
 from src.steps.transform import TransformExecutor
 
 logger = get_logger(__name__)
@@ -28,6 +29,7 @@ STEP_REGISTRY: dict[StepType, type[BaseStepExecutor]] = {
     StepType.TRANSFORM: TransformExecutor,
     StepType.CONDITION: ConditionExecutor,
     StepType.DELAY: DelayExecutor,
+    StepType.SUB_WORKFLOW: SubWorkflowExecutor,
 }
 
 

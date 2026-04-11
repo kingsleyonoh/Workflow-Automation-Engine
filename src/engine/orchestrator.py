@@ -27,6 +27,8 @@ async def start_execution(
     workflow: Workflow,
     trigger_data: dict[str, Any],
     tenant_id: uuid.UUID,
+    replayed_from: uuid.UUID | None = None,
+    depth: int = 0,
 ) -> Execution:
     """Start a new workflow execution.
 
@@ -38,6 +40,8 @@ async def start_execution(
         workflow: The workflow ORM model to execute.
         trigger_data: Trigger payload data.
         tenant_id: The tenant owning this execution.
+        replayed_from: Optional UUID of execution being replayed.
+        depth: Sub-workflow nesting depth (0 = top-level).
 
     Returns:
         The completed (or failed) Execution instance.
@@ -57,6 +61,7 @@ async def start_execution(
         status="pending",
         trigger_data=trigger_data,
         context={"trigger": trigger_data, "steps": {}},
+        replayed_from=replayed_from,
     )
     session.add(execution)
     await session.flush()
@@ -81,6 +86,14 @@ async def start_execution(
         session.add(step_exec)
         step_map[step_def.id] = step_exec
 
+    await session.flush()
+
+    # Store metadata in execution context for sub_workflow access
+    ctx = execution.context or {}
+    ctx["_depth"] = depth
+    ctx["_tenant_id"] = str(tenant_id)
+    execution.context = ctx
+    session.add(execution)
     await session.flush()
 
     # Execute DAG
@@ -177,6 +190,11 @@ async def _execute_step_with_retry(
             await session.refresh(execution)
             context = execution.context or {}
             step_input = get_step_input(context, step_def.id, step_def.config)
+
+            # Inject session and metadata for sub_workflow steps
+            step_input["_session"] = session
+            step_input["_depth"] = context.get("_depth", 0)
+            step_input["_tenant_id"] = context.get("_tenant_id", "")
 
             # Execute the step
             output = await _run_step(step_def, step_input)

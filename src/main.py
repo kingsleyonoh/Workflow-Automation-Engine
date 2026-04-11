@@ -14,6 +14,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.api.executions import router as executions_router
 from src.api.health import router as health_router
+from src.api.metrics import router as metrics_router
 from src.api.middleware.auth import AuthMiddleware
 from src.api.middleware.errors import (
     app_error_handler,
@@ -96,4 +97,5 @@ app.include_router(health_router)
 app.include_router(tenants_router)
 app.include_router(workflows_router)
 app.include_router(executions_router)
+app.include_router(metrics_router)
 app.include_router(webhooks_router)

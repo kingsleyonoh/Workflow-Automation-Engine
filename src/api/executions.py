@@ -4,6 +4,7 @@ POST /api/workflows/:id/execute — manual execution trigger
 GET /api/executions — list executions (tenant-scoped, paginated)
 GET /api/executions/:id — get execution with step details
 POST /api/executions/:id/cancel — cancel a running execution
+POST /api/executions/:id/replay — replay a previous execution
 GET /api/executions/:id/logs — get execution logs
 GET /api/executions/:id/stream — SSE stream of step status updates
 """
@@ -24,18 +25,21 @@ from src.api.execution_models import (
     ExecutionListResponse,
     ExecutionLogsListResponse,
     ManualExecuteRequest,
+    ReplayRequest,
     decode_execution_cursor,
     encode_execution_cursor,
     execution_log_to_response,
     execution_to_response,
     step_execution_to_response,
 )
+from src.config import settings
 from src.db.models import Execution, ExecutionLog
 from src.db.postgres import async_session_factory
 from src.engine.orchestrator import start_execution
 from src.engine.state import transition_execution, transition_step
 from src.lib.logger import get_logger
 from src.lib.utils import AppError
+from src.replay.service import replay_execution
 from src.triggers.manual import get_tenant_workflow, validate_workflow_active
 
 logger = get_logger(__name__)
@@ -265,6 +269,53 @@ async def cancel_execution(
     )
 
     return CancelExecutionResponse(cancelled=True)
+
+
+@router.post("/api/executions/{execution_id}/replay", status_code=202)
+async def replay_execution_endpoint(
+    execution_id: uuid.UUID,
+    body: ReplayRequest,
+    request: Request,
+) -> JSONResponse:
+    """Replay a previous execution with optional data overrides.
+
+    Args:
+        execution_id: The execution UUID to replay.
+        body: Request body with optional override_data.
+        request: HTTP request with tenant context.
+
+    Returns:
+        202 with ``{ execution_id }``.
+    """
+    if not settings.webhook_replay_enabled:
+        raise AppError(
+            code="REPLAY_DISABLED",
+            message="Execution replay is disabled.",
+            status_code=403,
+        )
+
+    tenant = request.state.tenant
+
+    async with async_session_factory() as session:
+        new_execution = await replay_execution(
+            session=session,
+            execution_id=execution_id,
+            tenant_id=tenant.id,
+            override_data=body.override_data or None,
+        )
+        await session.commit()
+
+    logger.info(
+        "execution_replayed",
+        original_id=str(execution_id),
+        new_id=str(new_execution.id),
+        tenant_id=str(tenant.id),
+    )
+
+    return JSONResponse(
+        status_code=202,
+        content={"execution_id": str(new_execution.id)},
+    )
 
 
 @router.get("/api/executions/{execution_id}/logs")

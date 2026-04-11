@@ -26,22 +26,24 @@ def _run_migrations():
     migrated_db fixtures should run their own up/downgrade.
     """
     import subprocess
+    import sys
 
     env = os.environ.copy()
     env["DATABASE_URL"] = TEST_DATABASE_URL
 
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    alembic_cmd = [sys.executable, "-m", "alembic"]
 
     # Downgrade first to ensure clean state, then upgrade
     subprocess.run(
-        ["alembic", "downgrade", "base"],
+        [*alembic_cmd, "downgrade", "base"],
         capture_output=True,
         text=True,
         cwd=project_root,
         env=env,
     )
     result = subprocess.run(
-        ["alembic", "upgrade", "head"],
+        [*alembic_cmd, "upgrade", "head"],
         capture_output=True,
         text=True,
         cwd=project_root,
@@ -52,7 +54,7 @@ def _run_migrations():
     yield
     # Downgrade after all tests complete
     subprocess.run(
-        ["alembic", "downgrade", "base"],
+        [*alembic_cmd, "downgrade", "base"],
         capture_output=True,
         text=True,
         cwd=project_root,

@@ -1,7 +1,8 @@
 """FastAPI application entry point for the Workflow Automation Engine.
 
-Creates the FastAPI app with CORS middleware, error handlers, and a
-health check endpoint. Uses lifespan for startup/shutdown hooks.
+Creates the FastAPI app with CORS, rate limiting, auth middleware,
+error handlers, and registers all API routers. Uses lifespan for
+startup/shutdown hooks.
 """
 
 from collections.abc import AsyncIterator
@@ -11,12 +12,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from src.api.health import router as health_router
 from src.api.middleware.auth import AuthMiddleware
 from src.api.middleware.errors import (
     app_error_handler,
     http_exception_handler,
     unhandled_exception_handler,
 )
+from src.api.middleware.rate_limit import RateLimitMiddleware
+from src.api.tenants import router as tenants_router
 from src.config import settings
 from src.db.postgres import dispose_engine
 from src.db.redis import close_redis
@@ -62,6 +66,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Rate limiting — Redis sliding window counter, per-route limits
+app.add_middleware(RateLimitMiddleware)
+
 # Auth middleware — validates X-API-Key header on protected paths
 app.add_middleware(AuthMiddleware)
 
@@ -70,12 +77,6 @@ app.add_exception_handler(AppError, app_error_handler)  # type: ignore[arg-type]
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)  # type: ignore[arg-type]
 app.add_exception_handler(Exception, unhandled_exception_handler)  # type: ignore[arg-type]
 
-
-@app.get("/api/health")
-async def health_check() -> dict[str, str]:
-    """Basic health check endpoint.
-
-    Returns a simple status response. Full health check with DB/Redis
-    connectivity will be implemented in a later batch.
-    """
-    return {"status": "ok"}
+# Register API routers
+app.include_router(health_router)
+app.include_router(tenants_router)

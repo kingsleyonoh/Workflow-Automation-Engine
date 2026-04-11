@@ -30,10 +30,21 @@ async def test_session_factory(_run_migrations):
 
 
 @pytest.fixture
-def patched_app(test_session_factory):
+def patched_app(test_session_factory, redis_client):
     """FastAPI app with auth middleware using the test database."""
-    with patch(
-        "src.api.middleware.auth.async_session_factory", test_session_factory
+    with (
+        patch(
+            "src.api.middleware.auth.async_session_factory",
+            test_session_factory,
+        ),
+        patch(
+            "src.api.workflows.async_session_factory",
+            test_session_factory,
+        ),
+        patch(
+            "src.api.middleware.rate_limit.get_redis",
+            return_value=redis_client,
+        ),
     ):
         from src.main import app
 

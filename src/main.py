@@ -21,6 +21,7 @@ from src.api.middleware.errors import (
 )
 from src.api.middleware.rate_limit import RateLimitMiddleware
 from src.api.tenants import router as tenants_router
+from src.api.workflows import router as workflows_router
 from src.config import settings
 from src.db.postgres import dispose_engine
 from src.db.redis import close_redis
@@ -80,3 +81,4 @@ app.add_exception_handler(Exception, unhandled_exception_handler)  # type: ignor
 # Register API routers
 app.include_router(health_router)
 app.include_router(tenants_router)
+app.include_router(workflows_router)

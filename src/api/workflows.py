@@ -73,6 +73,7 @@ async def create_workflow(
         steps=body.steps,
         is_active=body.is_active,
         webhook_path=webhook_path,
+        webhook_secret=body.webhook_secret,
     )
 
     async with async_session_factory() as session:
@@ -233,6 +234,9 @@ async def update_workflow(
                 }
             )
             workflow.steps = body.steps
+
+        if body.webhook_secret is not None:
+            workflow.webhook_secret = body.webhook_secret
 
         if body.trigger_type is not None:
             workflow.trigger_type = body.trigger_type

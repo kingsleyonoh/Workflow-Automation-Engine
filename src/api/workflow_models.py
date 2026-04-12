@@ -24,6 +24,7 @@ class WorkflowCreateRequest(BaseModel):
     trigger_config: dict[str, Any] = Field(default_factory=dict)
     steps: list[dict[str, Any]] = Field(..., min_length=1)
     is_active: bool = True
+    webhook_secret: str | None = None
 
 
 class WorkflowUpdateRequest(BaseModel):
@@ -35,6 +36,7 @@ class WorkflowUpdateRequest(BaseModel):
     trigger_config: dict[str, Any] | None = None
     steps: list[dict[str, Any]] | None = None
     is_active: bool | None = None
+    webhook_secret: str | None = None
 
 
 class WorkflowResponse(BaseModel):

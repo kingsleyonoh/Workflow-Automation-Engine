@@ -120,6 +120,20 @@ async def redis_client():
     await client.aclose()
 
 
+@pytest.fixture(autouse=True)
+def clear_workflow_cache():
+    """Clear the in-memory workflow cache between tests.
+
+    Prevents stale cached workflows from leaking across tests
+    that use different DB transactions/sessions.
+    """
+    from src.lib.cache import workflow_cache
+
+    workflow_cache.clear()
+    yield
+    workflow_cache.clear()
+
+
 @pytest.fixture
 async def pg_pool():
     """Raw asyncpg connection pool for smoke tests."""

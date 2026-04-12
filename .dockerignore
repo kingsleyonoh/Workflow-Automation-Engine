@@ -19,6 +19,7 @@ env
 # Documentation & AI workflows (not needed in image)
 docs/
 .agent/
+.yolo/
 *.md
 LICENSE
 
@@ -33,12 +34,13 @@ LICENSE
 .DS_Store
 Thumbs.db
 
-# Testing
+# Testing & tooling caches
 tests/
 .coverage
 htmlcov/
 .pytest_cache
 .mypy_cache
+.ruff_cache
 
 # Docker
 docker-compose*.yml

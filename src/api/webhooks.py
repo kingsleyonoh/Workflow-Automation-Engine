@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 from src.config import settings
 from src.db.postgres import async_session_factory
 from src.engine.orchestrator import start_execution
+from src.lib.cache import workflow_cache
 from src.lib.logger import get_logger
 from src.lib.utils import AppError, create_error_response
 from src.triggers.webhook import (
@@ -78,9 +79,14 @@ async def receive_webhook(
     request_headers = dict(request.headers)
 
     async with async_session_factory() as session:
-        # Look up workflow by path
+        # Check cache first, fall back to DB lookup
+        cached = workflow_cache.get_by_webhook_path(webhook_path)
         try:
-            workflow = await lookup_workflow_by_path(session, webhook_path)
+            if cached is not None:
+                workflow = cached
+            else:
+                workflow = await lookup_workflow_by_path(session, webhook_path)
+                workflow_cache.set(workflow)
         except AppError as exc:
             return JSONResponse(
                 status_code=exc.status_code,

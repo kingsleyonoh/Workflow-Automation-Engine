@@ -26,6 +26,7 @@ from src.api.workflow_models import (
 from src.db.models import Workflow
 from src.db.postgres import async_session_factory
 from src.engine.parser import parse_workflow_definition
+from src.lib.cache import workflow_cache
 from src.lib.logger import get_logger
 from src.lib.utils import AppError
 
@@ -244,6 +245,8 @@ async def update_workflow(
         await session.commit()
         await session.refresh(workflow)
 
+    workflow_cache.invalidate(workflow.id)
+
     logger.info(
         "workflow_updated",
         workflow_id=str(workflow.id),
@@ -279,6 +282,8 @@ async def delete_workflow(
         workflow = await _get_tenant_workflow(session, workflow_id, tenant.id)
         await session.delete(workflow)
         await session.commit()
+
+    workflow_cache.invalidate(workflow_id)
 
     logger.info(
         "workflow_deleted",

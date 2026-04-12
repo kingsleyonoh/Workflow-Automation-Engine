@@ -39,7 +39,7 @@ USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8000/api/health || exit 1
+  CMD wget --no-verbose --tries=1 -O /dev/null http://localhost:8000/api/health || exit 1
 
 EXPOSE 8000
 

@@ -1,0 +1,36 @@
+services:
+  workflow-engine:
+    image: ghcr.io/kingsleyonoh/workflow-engine:latest
+    container_name: workflow-engine
+    restart: unless-stopped
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "-O", "/dev/null", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.workflow-engine.rule=Host(`workflows.kingsleyonoh.com`)"
+      - "traefik.http.routers.workflow-engine.entrypoints=websecure"
+      - "traefik.http.routers.workflow-engine.tls.certresolver=letsencrypt"
+      - "traefik.http.services.workflow-engine.loadbalancer.server.port=8000"
+    networks:
+      - traefik-public
+      - shared-services_shared-internal
+
+  workflow-engine-worker:
+    image: ghcr.io/kingsleyonoh/workflow-engine:latest
+    container_name: workflow-engine-worker
+    restart: unless-stopped
+    env_file: .env
+    command: ["arq", "src.queue.worker.WorkerSettings"]
+    networks:
+      - shared-services_shared-internal
+
+networks:
+  traefik-public:
+    external: true
+  shared-services_shared-internal:
+    external: true

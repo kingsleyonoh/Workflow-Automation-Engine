@@ -1,0 +1,23 @@
+{
+  "monitors": [
+    {
+      "monitor_type": "status",
+      "url": "https://workflows.kingsleyonoh.com/api/health",
+      "pronounceable_name": "Workflow Engine Health",
+      "check_frequency": 60,
+      "request_timeout": 5,
+      "http_method": "get",
+      "expected_status_codes": [200],
+      "request_headers": [],
+      "confirmation_period": 120,
+      "regions": ["us", "eu"],
+      "paused": false,
+      "follow_redirects": true,
+      "remember_cookies": false,
+      "sms": false,
+      "email": true,
+      "push": true,
+      "recovery_period": 60
+    }
+  ]
+}

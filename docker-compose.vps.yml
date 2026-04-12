@@ -26,6 +26,8 @@ services:
     restart: unless-stopped
     env_file: .env
     command: ["arq", "src.queue.worker.WorkerSettings"]
+    healthcheck:
+      disable: true
     networks:
       - shared-services_shared-internal
 

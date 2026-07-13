@@ -95,8 +95,8 @@ class TestHttpStepSuccessResponses:
 class TestHttpStep4xxResponses:
     """Integration tests for 4xx client error responses."""
 
-    async def test_400_bad_request_captured(self):
-        """HTTP step captures 400 Bad Request without raising."""
+    async def test_400_bad_request_raises(self):
+        """HTTP step raises a step error for 400 Bad Request."""
         executor = HttpExecutor()
         config = {
             "url": "https://api.external.com/v1/validate",
@@ -112,13 +112,15 @@ class TestHttpStep4xxResponses:
                     json={"error": "validation_failed", "fields": ["email"]},
                 )
             )
-            result = await executor.execute(config, context)
+            with pytest.raises(AppError) as exc_info:
+                await executor.execute(config, context)
 
-        assert result["status_code"] == 400
-        assert "validation_failed" in result["body"]
+        assert exc_info.value.code == "HTTP_STEP_ERROR"
+        assert exc_info.value.details[0]["status_code"] == 400
+        assert "validation_failed" in exc_info.value.details[0]["body"]
 
-    async def test_401_unauthorized_captured(self):
-        """HTTP step captures 401 Unauthorized without raising."""
+    async def test_401_unauthorized_raises(self):
+        """HTTP step raises a step error for 401 Unauthorized."""
         executor = HttpExecutor()
         config = {
             "url": "https://api.external.com/v1/protected",
@@ -131,12 +133,13 @@ class TestHttpStep4xxResponses:
             respx.get("https://api.external.com/v1/protected").mock(
                 return_value=Response(401, json={"error": "unauthorized"})
             )
-            result = await executor.execute(config, context)
+            with pytest.raises(AppError) as exc_info:
+                await executor.execute(config, context)
 
-        assert result["status_code"] == 401
+        assert exc_info.value.details[0]["status_code"] == 401
 
-    async def test_403_forbidden_captured(self):
-        """HTTP step captures 403 Forbidden without raising."""
+    async def test_403_forbidden_raises(self):
+        """HTTP step raises a step error for 403 Forbidden."""
         executor = HttpExecutor()
         config = {
             "url": "https://api.external.com/v1/admin",
@@ -148,12 +151,13 @@ class TestHttpStep4xxResponses:
             respx.get("https://api.external.com/v1/admin").mock(
                 return_value=Response(403, json={"error": "forbidden"})
             )
-            result = await executor.execute(config, context)
+            with pytest.raises(AppError) as exc_info:
+                await executor.execute(config, context)
 
-        assert result["status_code"] == 403
+        assert exc_info.value.details[0]["status_code"] == 403
 
-    async def test_404_not_found_captured(self):
-        """HTTP step captures 404 Not Found without raising."""
+    async def test_404_not_found_raises(self):
+        """HTTP step raises a step error for 404 Not Found."""
         executor = HttpExecutor()
         config = {
             "url": "https://api.external.com/v1/missing",
@@ -165,12 +169,13 @@ class TestHttpStep4xxResponses:
             respx.get("https://api.external.com/v1/missing").mock(
                 return_value=Response(404, text="Not Found")
             )
-            result = await executor.execute(config, context)
+            with pytest.raises(AppError) as exc_info:
+                await executor.execute(config, context)
 
-        assert result["status_code"] == 404
+        assert exc_info.value.details[0]["status_code"] == 404
 
-    async def test_429_rate_limited_captured(self):
-        """HTTP step captures 429 Too Many Requests without raising."""
+    async def test_429_rate_limited_raises(self):
+        """HTTP step raises a step error for 429 Too Many Requests."""
         executor = HttpExecutor()
         config = {
             "url": "https://api.external.com/v1/data",
@@ -186,9 +191,10 @@ class TestHttpStep4xxResponses:
                     headers={"Retry-After": "60"},
                 )
             )
-            result = await executor.execute(config, context)
+            with pytest.raises(AppError) as exc_info:
+                await executor.execute(config, context)
 
-        assert result["status_code"] == 429
+        assert exc_info.value.details[0]["status_code"] == 429
 
 
 class TestHttpStep5xxResponses:

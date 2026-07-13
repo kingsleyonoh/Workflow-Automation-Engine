@@ -2,7 +2,7 @@
 
 Makes async HTTP requests via httpx with Jinja2 templating in URL,
 headers, and body. Captures response status, headers, body, and duration.
-Raises retryable errors on 5xx/timeout; 4xx responses are captured.
+Raises step errors on non-2xx responses and transport failures.
 """
 
 import time
@@ -29,8 +29,8 @@ class HttpExecutor(BaseStepExecutor):
     Output: ``{ status_code, headers, body, duration_ms }``
 
     Jinja2 templating is applied to url, header values, and body.
-    5xx responses and timeouts raise retryable errors.
-    4xx responses are captured normally (not retried).
+    Non-2xx responses and transport failures raise step errors so the
+    execution engine can apply its configured retry and exhaustion semantics.
     """
 
     async def execute(
@@ -47,7 +47,7 @@ class HttpExecutor(BaseStepExecutor):
 
         Raises:
             AppError: STEP_CONFIG_ERROR if url is missing.
-            AppError: HTTP_STEP_ERROR on 5xx or connection failure.
+            AppError: HTTP_STEP_ERROR on non-2xx or connection failure.
             AppError: HTTP_STEP_TIMEOUT on request timeout.
         """
         url_template = config.get("url")
@@ -103,8 +103,8 @@ class HttpExecutor(BaseStepExecutor):
 
         response_headers = dict(response.headers)
 
-        # 5xx: raise retryable error
-        if response.status_code >= 500:
+        # Only 2xx responses complete the step successfully.
+        if not 200 <= response.status_code < 300:
             raise AppError(
                 code="HTTP_STEP_ERROR",
                 message=(

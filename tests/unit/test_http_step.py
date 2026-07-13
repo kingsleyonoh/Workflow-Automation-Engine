@@ -1,8 +1,8 @@
 """Unit tests for the HTTP step executor.
 
 Tests the HttpExecutor that makes async HTTP calls via httpx, with
-Jinja2 templating in URL/headers/body, response capture, retry policy
-(5xx/timeout retried, 4xx not), and response size limits.
+Jinja2 templating in URL/headers/body, response capture, non-2xx failure
+handling, transport failures, and response size limits.
 """
 
 import pytest
@@ -241,26 +241,27 @@ class TestHttpExecutorRetry:
         assert exc_info.value.code == "HTTP_STEP_ERROR"
         assert exc_info.value.status_code == 502
 
-    async def test_4xx_raises_non_retryable_error(self):
-        """HTTP step raises non-retryable error on 4xx (not retried)."""
+    @pytest.mark.parametrize("status_code", [199, 300, 400, 404, 429])
+    async def test_non_2xx_response_raises_step_error(self, status_code):
+        """HTTP step rejects redirects and client errors as step failures."""
         from src.steps.http import HttpExecutor
 
         executor = HttpExecutor()
         config = {
-            "url": "https://api.example.com/notfound",
+            "url": "https://api.example.com/unsuccessful",
             "method": "GET",
         }
         context = {"trigger": {"payload": {}}, "steps": {}}
 
         with respx.mock:
-            respx.get("https://api.example.com/notfound").mock(
-                return_value=Response(404, text="Not Found")
+            respx.get("https://api.example.com/unsuccessful").mock(
+                return_value=Response(status_code, text="Request unsuccessful")
             )
-            # 4xx should still capture the response without raising
-            result = await executor.execute(config, context)
+            with pytest.raises(AppError) as exc_info:
+                await executor.execute(config, context)
 
-        # 4xx responses are captured, not raised
-        assert result["status_code"] == 404
+        assert exc_info.value.code == "HTTP_STEP_ERROR"
+        assert exc_info.value.details[0]["status_code"] == status_code
 
     async def test_timeout_raises_retryable_error(self):
         """HTTP step raises retryable error on timeout."""
